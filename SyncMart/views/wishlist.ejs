@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+    <title>Wishlist - SyncMart</title>
+   <link rel="stylesheet"
+          href="../public/css/styles.css">
+  
+  <link rel = "stylesheet" href="../public/products.css">
+
+</head>
+
+<body>
+
+    <%- include("partials/navbar.ejs") %>
+
+    <!-- Navigation -->
+
+    <nav class="product-nav">
+        <a href="/home">Home</a>
+        <a href="/products">Products</a>
+        <a href="/cart">Cart</a>
+    </nav>
+
+    <h1 class="page-title">My Wishlist ❤️</h1>
+
+    <% if (products && products.length > 0) { %>
+
+        <div class="wishlist-container">
+
+            <% products.forEach(function(product) { %>
+
+                <div class="wishlist-card">
+
+                    <!-- Image -->
+
+                    <div class="wishlist-image">
+                        <img src="/public/images/<%= product.image %>" alt="<%= product.name %>">
+                    </div>
+
+                    <!-- Information -->
+
+                    <div class="wishlist-info">
+                        <p class="brand"><%= product.brand %></p>
+                        <h2><%= product.name %></h2>
+                        <p><%= product.description %></p>
+
+                        <div class="wishlist-price">
+                            $<%= Number(product.price).toFixed(2) %>
+                        </div>
+
+                        <% if (product.stock > 0) { %>
+                            <p class="stock">In Stock</p>
+                        <% } else { %>
+                            <p class="out-stock">Out of Stock</p>
+                        <% } %>
+
+                        <!-- Actions -->
+
+                        <div class="wishlist-actions">
+
+                            <!-- Add To Cart -->
+
+                            <form action="/cart/add/<%= product.id %>" method="POST">
+                                <button
+                                    type="submit"
+                                    class="cart-btn"
+                                    <% if (product.stock <= 0) { %>
+                                        disabled
+                                    <% } %>
+                                >
+                                    🛒 Add to Cart
+                                </button>
+                            </form>
+
+                            <!-- Remove -->
+
+                            <form action="/wishlist/remove/<%= product.id %>" method="POST">
+                                <button type="submit" class="remove-btn"> Remove</button>
+                            </form>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            <% }); %>
+
+        </div>
+
+    <% } else { %>
+
+        <!-- Empty Wishlist -->
+
+        <div class="empty-wishlist">
+
+            <h2>Your wishlist is empty ❤️</h2>
+            <p>Save products you love here.</p>
+            <a href="/products" class="category-btn">Browse Products</a>
+
+        </div>
+
+    <% } %>
+    
+  <%- include(`partials/footer.ejs`) %>
+
+</body>
+
+</html>

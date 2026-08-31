@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+    <title>Shopping Cart - SyncMart</title>
+    <link  rel="stylesheet" href="../public/css/styles.css">
+    <link rel="stylesheet" href="../public/cart.css">
+
+</head>
+
+<body>
+
+       <%- include("partials/navbar.ejs") %>
+
+<div class="cart-container">
+
+    <h1>Shopping Cart</h1>
+    <% if (products.length === 0) { %>
+        <div class="empty-cart">
+            <h2>Your cart is empty</h2>
+            <p>Add some products to your cart.</p>
+            <a href="/products" class="continue-btn">Continue Shopping</a>
+        </div>
+
+    <% } else { %>
+
+        <div class="cart-items">
+            <% products.forEach(function(product) { %>
+                <%
+                    const quantity = cart.filter(function(id) {
+                        return Number(id) === Number(product.id);
+                    }).length;
+                %>
+
+                <div class="cart-item">
+
+                    <div class="cart-product-info">
+                        <h2><%= product.name %></h2>
+                        <p>Brand: <%= product.brand %></p>
+                        <p>Price: $<%= Number(product.price).toFixed(2) %></p>
+                        <p>Quantity:<%= quantity %></p>
+                    </div>
+
+                    <div class="cart-product-total">
+                        <strong>
+                            $
+                            <%= (
+                                Number(product.price) *
+                                quantity
+                            ).toFixed(2) %>
+                        </strong>
+                    </div>
+
+                    <div class="cart-actions">
+                        <form action="/cart/remove/<%= product.id %>" method="POST">
+                            <button
+                                type="submit"
+                                class="remove-btn">
+                                Remove
+                            </button>
+                        </form>
+                    </div>
+
+                </div>
+
+            <% }); %>
+
+        </div>
+
+        <!-- Cart Total -->
+
+        <div class="cart-summary">
+
+            <div class="cart-total">
+                <span>Total:</span>
+                <strong>$<%= Number(total).toFixed(2) %></strong>
+            </div>
+
+            <!-- Checkout Button -->
+
+            <a href="/checkout" class="checkout-btn">Proceed to Checkout</a>
+
+        </div>
+
+    <% } %>
+
+</div>
+
+  <%- include(`partials/footer.ejs`) %>
+  
+</body>
+
+</html>

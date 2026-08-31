@@ -1,0 +1,125 @@
+/* .signin{
+    max-width: 400px;
+    margin: 50px auto;
+    padding:20px;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    margin-bottom: 30px;
+    font-family: Arial, sans-serif;
+    align-items: center;
+}
+h1{
+    font-size: 2rem;
+    margin-bottom: 20px;
+    color: #333;
+}
+input{
+    width: 100%;
+    padding: 10px; 
+    font-size: 1rem;
+    border: 1px solid #ccc; 
+    box-sizing: border-box;
+    margin-bottom: 30px;
+}
+.signin-btn{
+    width: 100%;
+    padding: 10px;
+    font-size: 1rem;
+    color: white;
+    background-color: #007bff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-bottom: 10px;
+}
+button:hover {
+  background-color: #0056b3;
+}
+a{
+    color: #007bff;
+    text-decoration: none;
+    font-size: 1rem;
+     font-family: Arial, sans-serif;
+
+}
+p{
+    text-align: center;
+} */
+
+/* =========================
+   SIGN IN PAGE
+========================= */
+
+.signin {
+    max-width: 400px;
+    margin: 50px auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    margin-bottom: 30px;
+    font-family: Arial, sans-serif;
+}
+
+
+/* Sign In Heading */
+
+.signin h1 {
+    font-size: 2rem;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+
+/* Sign In Inputs ONLY */
+
+.signin input {
+    width: 100%;
+    padding: 10px;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+    margin-bottom: 30px;
+}
+
+
+/* Sign In Button ONLY */
+
+.signin .signin-btn {
+    width: 100%;
+    padding: 10px;
+    font-size: 1rem;
+    color: white;
+    background-color: #007bff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-bottom: 10px;
+}
+
+
+/* Sign In Button Hover */
+
+.signin .signin-btn:hover {
+    background-color: #0056b3;
+}
+
+
+/* Sign In Links ONLY */
+
+.signin a {
+    color: #007bff;
+    text-decoration: none;
+    font-size: 1rem;
+    font-family: Arial, sans-serif;
+}
+
+
+/* Sign In Paragraph ONLY */
+
+.signin p {
+    text-align: center;
+}

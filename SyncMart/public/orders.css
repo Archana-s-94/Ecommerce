@@ -1,0 +1,37 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #f5f5f5;
+}
+
+.orders-container {
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+}
+.orders-container h1 {
+    margin-bottom: 30px;
+
+}
+
+.order-card {
+    background: white;
+    padding: 25px;
+    margin-bottom: 20px;
+    border-radius: 10px;
+    box-shadow: 0 3px 12px
+        rgba(0, 0, 0, 0.1);
+}
+
+.order-card h2 {
+    margin-bottom: 15px;
+}
+
+.order-card p {
+    margin: 8px 0;
+}

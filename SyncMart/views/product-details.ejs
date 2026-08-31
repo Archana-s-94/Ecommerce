@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+    <title><%= product.name %> - SyncMart</title>
+    <link rel = "stylesheet" href="../public/css/styles.css">
+    <link rel = "stylesheet" href="../public/products.css">
+
+</head>
+
+<body>
+
+    <!-- Navigation -->
+
+    <nav class="product-nav">
+        <a href="/home">Home</a>
+        <a href="/products">Products</a>
+        <a href="/cart">Cart</a>
+        <a href="/wishlist">Wishlist</a>
+    </nav>
+
+    <!-- Product Details -->
+
+    <div class="product-detail-container">
+
+        <!-- Image -->
+
+        <div class="product-detail-image">
+            <img src="/public/images/<%= product.image %>" alt="<%= product.name %>">
+        </div>
+
+        <!-- Information -->
+
+        <div class="product-detail-info">
+            <p class="detail-brand"> <%= product.brand %></p>
+            <h1><%= product.name %></h1>
+            <p class="detail-model">Model:<%= product.model %></p>
+            <p class="detail-description"> <%= product.description %></p>
+
+            <!-- Specifications -->
+
+            <div class="specifications">
+                <% if (product.ram) { %>
+                    <p><strong>RAM:</strong><%= product.ram %></p>
+                <% } %>
+
+                <% if (product.storage) { %>
+                    <p><strong>Storage:</strong><%= product.storage %></p>
+                <% } %>
+
+                <% if (product.processor) { %>
+                    <p><strong>Processor:</strong><%= product.processor %></p>
+                <% } %>
+
+                <% if (product.os) { %>
+                    <p><strong>Operating System:</strong><%= product.os %></p>
+                <% } %>
+
+            </div>
+
+            <!-- Price -->
+
+            <div class="detail-price">$<%= Number(product.price).toFixed(2) %></div>
+
+            <!-- Stock-->
+
+            <% if (product.stock > 0) { %>
+                <p class="stock">In Stock:<%= product.stock %></p>
+            <% } else { %>
+                <p class="out-stock">Out of Stock</p>
+            <% } %>
+
+            <!-- Buttons -->
+
+            <div class="detail-actions">
+
+                <!-- Add To Cart -->
+
+                <form action="/cart/add/<%= product.id %>" method="POST">
+                    <button type="submit" class="cart-btn"
+                        <% if (product.stock <= 0) { %>
+                            disabled
+                        <% } %>
+                    >
+                        🛒 Add to Cart
+                    </button>
+                </form>
+
+                <!-- Wishlist -->
+
+                <form action="/wishlist/add/<%= product.id %>"method="POST">
+                    <button type="submit" class="wishlist-detail-btn">
+                        ♡ Add to Wishlist
+                    </button>
+                </form>
+
+            </div>
+
+
+            <br>
+
+            <a href="/products" class="back-products">← Back to Products</a>
+            
+        </div>
+
+    </div>
+
+</body>
+
+</html>

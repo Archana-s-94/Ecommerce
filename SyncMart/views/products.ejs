@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
+    <title>Our Products</title>
+    <link rel="stylesheet"
+          href="../public/css/styles.css">
+    <link rel = "stylesheet" href="../public/products.css">
+
+</head>
+
+<body>
+
+    <%- include("partials/navbar.ejs") %>
+
+    <h1 class="page-title">Our Products</h1>
+
+    <!-- Category Buttons -->
+
+    <div class="category-buttons">
+
+        <a href="/products" class="category-btn">All Products</a>
+        <a href="/category/1" class="category-btn">Mobiles</a>
+        <a href="/category/2" class="category-btn">Laptops</a>
+
+    </div>
+
+    <!-- Search -->
+
+    <div class="search-container">
+
+    <form action="/search" method="GET">
+
+        <input type="text"
+            name="query"
+            placeholder="Search products..."
+            value="<%= typeof searchQuery !== 'undefined' ? searchQuery : '' %>">
+
+        <button type="submit">🔍 Search </button>
+
+    </form>
+
+</div>
+
+    <!-- Product Cards-->
+
+
+    <div class="product-container">
+
+        <% products.forEach(function(product) { %>
+
+            <div class="product-card">
+
+                <!-- Wishlist -->
+
+                <form action="/wishlist/add/<%= product.id %>" method="POST">
+
+                    <button type="submit" class="wishlist-btn">♡</button>
+
+                </form>
+
+                <!-- Image -->
+
+                <div class="product-image">
+
+                   <img src="/public/images/<%= product.image %>" alt="<%= product.name %>">
+
+                </div>
+
+                <!-- Product Information -->
+
+                <div class="product-info">
+                    <p class="brand"><%= product.brand %></p>
+                    <h2><%= product.name %></h2>
+                    <p class="description"><%= product.description %></p>
+                    <div class="specifications">
+
+                        <% if (product.ram) { %>
+                            <p><strong>RAM:</strong><%= product.ram %></p>
+                        <% } %>
+
+                        <% if (product.storage) { %>
+                            <p><strong>Storage:</strong><%= product.storage %></p>
+                        <% } %>
+
+                        <% if (product.processor) { %>
+                            <p><strong>Processor:</strong><%= product.processor %></p>
+                        <% } %>
+
+                    </div>
+
+                    <!-- Price -->
+
+                    <p class="price">$<%= Number(product.price).toFixed(2) %></p>
+
+                    <!-- Stock -->
+
+                    <% if (product.stock > 0) { %>
+                        <p class="stock">In Stock: <%= product.stock %></p>
+                    <% } else { %>
+                        <p class="out-stock">Out of Stock</p>
+                    <% } %>
+
+                    <!-- Buttons -->
+
+                    <div class="product-actions">
+
+                        <form action="/cart/add/<%= product.id %>" method="POST">
+
+                            <button
+                                type="submit"
+                                class="cart-btn"
+                                <% if (product.stock <= 0) { %>
+                                    disabled
+                                <% } %>
+                            >
+                                🛒 Add to Cart
+                            </button>
+
+                        </form>
+
+                        <a href="/product/<%= product.id %>" class="details-btn">View Details</a>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        <% }); %>
+
+    </div>
+
+  <%- include(`partials/footer.ejs`) %>
+  
+</body>
+
+</html>
+
+

@@ -1,0 +1,49 @@
+<html>
+  <head>
+
+    <link rel = "stylesheet" href="../public/css/styles.css">
+   <link rel = "stylesheet" href="../public/categories.css">
+
+  </head>
+
+  <body>
+
+ <%- include(`partials/navbar.ejs`) %> 
+
+ <section class="categories-section">
+
+    <h1>Products</h1>
+
+    <div class="category-container">
+
+        <!-- Mobile Card -->
+
+        <div class="category-card">
+            <h2>Mobile</h2>
+            <p>Discover the latest smartphones.</p>
+                <span class="card-buttons">  
+                    <a href="/category/1" class="category-btn">View Products</a>
+                    <a href="/category/1" class="shop-btn">Shop Now</a>
+                 </span>
+        </div>
+
+        <!-- Laptop Card -->
+
+        <div class="category-card">
+            <h2>Laptop</h2>
+            <p>Discover the latest laptops.</p>
+              <span class="card-buttons">
+                <a href="/category/2" class="category-btn">View Products</a>
+                <a href="/category/2" class="shop-btn">Shop Now</a>
+              </span>
+        </div>
+
+    </div>
+
+</section>
+
+  <%- include(`partials/footer.ejs`) %>
+
+  </body>
+
+  </html>
