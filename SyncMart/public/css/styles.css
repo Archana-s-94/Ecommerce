@@ -280,3 +280,45 @@
     color: #bcccdc;
     font-size: 14px;
 }
+.signout-form {
+    display: inline;
+}
+
+.signout-button {
+    background: none;
+    border: none;
+
+    color: inherit;
+
+    font: inherit;
+
+    cursor: pointer;
+
+    padding: 0;
+}
+
+.signout-button:hover {
+    text-decoration: underline;
+}
+.signout-form {
+    margin: 0;
+    padding: 0;
+}
+
+.signout-button {
+    background: none;
+    border: none;
+
+    color: white;
+
+    font-family: inherit;
+    font-size: inherit;
+
+    cursor: pointer;
+
+    padding: 0;
+}
+
+.signout-button:hover {
+    text-decoration: underline;
+}

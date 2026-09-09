@@ -1,8 +1,10 @@
-var express = require("express");
-var app = express();
+const express = require("express");
+const session = require("express-session");
+const bcrypt = require("bcrypt");
 
-var session = require("express-session");
-var conn = require("./dbconfig");
+const conn = require("./dbconfig");
+
+const app = express();
 
 app.set("view engine", "ejs");
 
@@ -18,6 +20,18 @@ app.use("/public", express.static("public"));
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+
+// MAKE SESSION AVAILABLE TO ALL EJS PAGES
+
+app.use(function (req, res, next) {
+  res.locals.signedin = req.session.signedin || false;
+
+  res.locals.username = req.session.username || null;
+
+  res.locals.userId = req.session.userId || null;
+
+  next();
+});
 
 // Home-Page
 
@@ -318,113 +332,292 @@ app.post("/cart/remove/:id", function (req, res) {
 
 app.get("/signup", function (req, res) {
   res.render("signup", {
-    title: "Sign Up",
+    error: null,
   });
 });
 
 // Sign up
 
-app.post("/signup", function (req, res) {
+app.post("/signup", async function (req, res) {
   const username = req.body.username;
-
   const email = req.body.email;
-
   const password = req.body.password;
-
   const contact = req.body.contact;
 
   if (!username || !email || !password || !contact) {
-    return res.send("Please fill all fields");
+    return res.render("signup", {
+      error: "Please fill in all fields.",
+    });
   }
 
-  const sql = `
-        INSERT INTO users
-        (username, email, password, contact)
-        VALUES (?, ?, ?, ?)
-    `;
+  const checkSql = `
+    SELECT id
+    FROM users
+    WHERE email = ?
+  `;
 
-  conn.query(
-    sql,
-    [username, email, password, contact],
-    function (error, results) {
-      if (error) {
-        console.log(error);
+  conn.query(checkSql, [email], async function (err, result) {
+    if (err) {
+      console.log("Email check error:", err);
 
-        return res.status(500).send("Database error");
-      }
+      return res.status(500).send("Database error");
+    }
 
-      console.log("User signed up successfully");
+    if (result.length > 0) {
+      return res.render("signup", {
+        error: "Email already registered.",
+      });
+    }
 
-      res.redirect("/signin");
-    },
-  );
+    try {
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      const insertSql = `
+          INSERT INTO users
+          (
+            username,
+            email,
+            password,
+            contact
+          )
+          VALUES (?, ?, ?, ?)
+        `;
+
+      conn.query(
+        insertSql,
+        [username, email, hashedPassword, contact],
+        function (insertErr) {
+          if (insertErr) {
+            console.log("Signup error:", insertErr);
+
+            return res.status(500).send("Unable to create account");
+          }
+
+          res.redirect("/signin");
+        },
+      );
+    } catch (hashError) {
+      console.log("Password hash error:", hashError);
+
+      res.status(500).send("Unable to create account");
+    }
+  });
 });
+
+// app.post("/signup", function (req, res) {
+//   const username = req.body.username;
+
+//   const email = req.body.email;
+
+//   const password = req.body.password;
+
+//   const contact = req.body.contact;
+
+//   if (!username || !email || !password || !contact) {
+//     return res.send("Please fill all fields");
+//   }
+
+//   const sql = `
+//         INSERT INTO users
+//         (username, email, password, contact)
+//         VALUES (?, ?, ?, ?)
+//     `;
+
+//   conn.query(
+//     sql,
+//     [username, email, password, contact],
+//     function (error, results) {
+//       if (error) {
+//         console.log(error);
+
+//         return res.status(500).send("Database error");
+//       }
+
+//       console.log("User signed up successfully");
+
+//       res.redirect("/signin");
+//     },
+//   );
+// });
 
 // Sign in page
 
 app.get("/signin", function (req, res) {
+  if (req.session.userId) {
+    return res.redirect("/home");
+  }
+
   res.render("signin", {
-    title: "Sign In",
+    error: null,
   });
 });
 
-app.get("/login", function (req, res) {
-  res.redirect("/signin");
-});
+// app.get("/signin", function (req, res) {
+//   res.render("signin", {
+//     title: "Sign In",
+//   });
+// });
+
+// app.get("/login", function (req, res) {
+//   res.redirect("/signin");
+// });
 
 // Sign in
 
 app.post("/signin", function (req, res) {
-  const email = req.body.email;
+  const email = req.body.email.trim().toLowerCase();
   const password = req.body.password;
 
-  console.log("Login attempt:", email);
-
   if (!email || !password) {
-    return res.send("Please enter email and password");
+    return res.render("signin", {
+      error: "Please enter your email and password.",
+    });
   }
 
   const sql = `
-        SELECT id, username, email, password, contact
-        FROM users
-        WHERE email = ?
-        AND password = ?
-    `;
+    SELECT *
+    FROM users
+    WHERE email = ?
+  `;
 
-  conn.query(sql, [email, password], function (error, results) {
-    if (error) {
-      console.log("Login database error:", error);
+  conn.query(sql, [email], async function (err, result) {
+    if (err) {
+      console.log("Signin database error:", err);
+
       return res.status(500).send("Database error");
     }
 
-    if (results.length === 0) {
-      return res.send("Incorrect email and/or password");
+    if (result.length === 0) {
+      return res.render("signin", {
+        error: "Invalid email or password.",
+      });
     }
 
-    const user = results[0];
+    const user = result[0];
 
-    console.log("FULL USER:", user);
+    try {
+      const passwordMatch = await bcrypt.compare(password, user.password);
 
-    // IMPORTANT
-
-    req.session.userId = user.id;
-    req.session.username = user.username;
-    req.session.email = user.email;
-    req.session.signedin = true;
-
-    console.log("USER ID BEFORE SAVE:", req.session.userId);
-
-    req.session.save(function (err) {
-      if (err) {
-        console.log("SESSION SAVE ERROR:", err);
-
-        return res.status(500).send("Session error");
+      if (!passwordMatch) {
+        return res.render("signin", {
+          error: "Invalid email or password.",
+        });
       }
 
-      console.log("USER ID AFTER SAVE:", req.session.userId);
+      req.session.userId = user.id;
 
-      res.redirect("/home");
-    });
+      req.session.username = user.username;
+
+      req.session.email = user.email;
+
+      req.session.signedin = true;
+
+      req.session.save(function (sessionError) {
+        if (sessionError) {
+          console.log("Session save error:", sessionError);
+
+          return res.status(500).send("Unable to create session");
+        }
+
+        res.redirect("/home");
+      });
+    } catch (passwordError) {
+      console.log("Password compare error:", passwordError);
+
+      res.status(500).send("Unable to sign in");
+    }
+  });
+});
+
+app.post("/signout", function (req, res) {
+  req.session.destroy(function (err) {
+    if (err) {
+      console.log("Signout error:", err);
+
+      return res.status(500).send("Unable to sign out");
+    }
+
+    res.clearCookie("connect.sid");
+
+    res.redirect("/home");
+  });
+});
+
+// Login Protection Middleware
+function requireLogin(req, res, next) {
+  if (!req.session.userId) {
+    return res.redirect("/signin");
+  }
+
+  next();
+}
+
+// app.post("/signin", function (req, res) {
+//   const email = req.body.email;
+//   const password = req.body.password;
+
+//   console.log("Login attempt:", email);
+
+//   if (!email || !password) {
+//     return res.send("Please enter email and password");
+//   }
+
+//   const sql = `
+//         SELECT id, username, email, password, contact
+//         FROM users
+//         WHERE email = ?
+//         AND password = ?
+//     `;
+
+//   conn.query(sql, [email, password], function (error, results) {
+//     if (error) {
+//       console.log("Login database error:", error);
+//       return res.status(500).send("Database error");
+//     }
+
+//     if (results.length === 0) {
+//       return res.send("Incorrect email and/or password");
+//     }
+
+//     const user = results[0];
+
+//     console.log("FULL USER:", user);
+
+//     // IMPORTANT
+
+//     req.session.userId = user.id;
+//     req.session.username = user.username;
+//     req.session.email = user.email;
+//     req.session.signedin = true;
+
+//     console.log("USER ID BEFORE SAVE:", req.session.userId);
+
+//     req.session.save(function (err) {
+//       if (err) {
+//         console.log("SESSION SAVE ERROR:", err);
+
+//         return res.status(500).send("Session error");
+//       }
+
+//       console.log("USER ID AFTER SAVE:", req.session.userId);
+
+//       res.redirect("/home");
+//     });
+//   });
+// });
+
+// SignOut Page
+app.post("/signout", function (req, res) {
+  req.session.destroy(function (err) {
+    if (err) {
+      console.log("Signout error:", err);
+
+      return res.status(500).send("Unable to sign out");
+    }
+
+    res.clearCookie("connect.sid");
+
+    res.redirect("/home");
   });
 });
 

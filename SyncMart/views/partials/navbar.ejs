@@ -1,5 +1,120 @@
 <nav class="navbar">
 
+    <div class="logo">
+
+        <a href="/home">
+            SyncMart
+        </a>
+
+    </div>
+
+
+    <ul class="nav-links">
+
+        <li>
+            <a href="/home">
+                Home
+            </a>
+        </li>
+
+        <li>
+            <a href="/products">
+                Products
+            </a>
+        </li>
+
+        <li>
+            <a href="/categories">
+                Categories
+            </a>
+        </li>
+
+        <li>
+            <a href="/wishlist">
+                Wishlist
+            </a>
+        </li>
+
+        <li>
+            <a href="/cart">
+                Cart
+            </a>
+        </li>
+
+
+        <% if (signedin) { %>
+
+            <li>
+                <a href="/orders">
+                    Orders
+                </a>
+            </li>
+
+            <li>
+                <a href="/profile">
+                    <%= username %>
+                </a>
+            </li>
+
+            <li>
+
+                <form
+                    action="/signout"
+                    method="POST"
+                    class="signout-form"
+                >
+
+                    <button
+                        type="submit"
+                        class="signout-button"
+                    >
+                        Sign Out
+                    </button>
+
+                </form>
+
+            </li>
+
+        <% } else { %>
+
+            <li>
+                <a href="/signin">
+                    Sign In
+                </a>
+            </li>
+
+        <% } %>
+
+    </ul>
+
+
+    <div class="search-container">
+
+        <form
+            action="/search"
+            method="GET"
+        >
+
+            <input
+                type="text"
+                name="query"
+                placeholder="Search products..."
+                value="<%= typeof searchQuery !== 'undefined' ? searchQuery : '' %>"
+            >
+
+            <button type="submit">
+                🔍
+            </button>
+
+        </form>
+
+    </div>
+
+</nav>
+
+
+<!-- <nav class="navbar">
+
      <div class="logo">
         <a href="/">SyncMart</a>
     </div>
@@ -34,6 +149,38 @@
              <li><a href="/signin">Sign In</a></li></ul>
         
 
+             <% if (signedin) { %>
+
+  <a href="/profile">
+    <%= username %>
+  </a>
+
+  <a href="/orders">
+    Orders
+  </a>
+
+  <form
+    action="/signout"
+    method="POST"
+    class="signout-form"
+  >
+
+    <button
+      type="submit"
+      class="signout-button"
+    >
+      Sign Out
+    </button>
+
+  </form>
+
+<% } else { %>
+
+  <a href="/signin">
+    Sign In
+  </a>
+
+<% } %>
 </nav>
 
-    
+     -->

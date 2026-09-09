@@ -1,5 +1,93 @@
+<!DOCTYPE html>
 
 <html>
+
+<head>
+
+  <title>
+    Sign In | SyncMart
+  </title>
+  <link rel = "stylesheet" href="../public/css/styles.css">
+        <link rel = "stylesheet" href="../public/signin.css">
+
+  
+
+</head>
+
+<body>
+     <%- include(`partials/navbar.ejs`) %>
+
+  <div class="signin-container">
+
+    <div class="signin-card">
+
+      <h1>
+        Welcome Back
+      </h1>
+
+      <p class="subtitle">
+        Sign in to manage your wishlist,
+        cart and orders.
+      </p>
+
+      <% if (error) { %>
+
+        <div class="error-message">
+          <%= error %>
+        </div>
+
+      <% } %>
+
+      <form
+        action="/signin"
+        method="POST"
+      >
+
+        <label>
+          Email
+        </label>
+
+        <input
+          type="email"
+          name="email"
+          required
+        >
+
+        <label>
+          Password
+        </label>
+
+        <input
+          type="password"
+          name="password"
+          required
+        >
+
+        <button type="submit">
+          Sign In
+        </button>
+
+      </form>
+
+      <p class="signup-link">
+
+        Don't have an account?
+
+        <a href="/signup">
+          Create Account
+        </a>
+
+      </p>
+
+    </div>
+
+  </div>
+
+</body>
+ <%- include(`partials/footer.ejs`) %>
+</html>
+
+<!-- <html>
     <head>
 
         <link rel = "stylesheet" href="../public/css/styles.css">
@@ -29,4 +117,4 @@
 
     </body>
 
-</html>
+</html> -->

@@ -1,4 +1,119 @@
+
+<!DOCTYPE html>
+
 <html>
+
+<head>
+
+  <title>
+    Sign Up | SyncMart
+  </title>
+ <link rel = "stylesheet" href="../public/css/styles.css">
+          <link rel = "stylesheet" href="../public/signup.css">
+
+</head>
+
+<body>
+     <%- include(`partials/navbar.ejs`) %>
+
+  <div class="signup-container">
+
+    <div class="signup-card">
+
+      <h1>
+        Create Account
+      </h1>
+
+      <p class="subtitle">
+        Create your SyncMart account
+        to save products and manage orders.
+      </p>
+
+      <% if (error) { %>
+
+        <div class="error-message">
+
+          <%= error %>
+
+        </div>
+
+      <% } %>
+
+      <form
+        action="/signup"
+        method="POST"
+      >
+
+        <label>
+          Username
+        </label>
+
+        <input
+          type="text"
+          name="username"
+          required
+        >
+
+        <label>
+          Email
+        </label>
+
+        <input
+          type="email"
+          name="email"
+          required
+        >
+
+        <label>
+          Password
+        </label>
+
+        <input
+          type="password"
+          name="password"
+          minlength="6"
+          required
+        >
+
+        <label>
+          Contact Number
+        </label>
+
+        <input
+          type="text"
+          name="contact"
+          required
+        >
+
+        <button type="submit">
+          Create Account
+        </button>
+
+      </form>
+
+      <p class="signin-link">
+
+        Already have an account?
+
+        <a href="/signin">
+          Sign In
+        </a>
+
+      </p>
+
+    </div>
+
+  </div>
+
+</body>
+
+  <%- include(`partials/footer.ejs`) %>
+  
+</html>
+
+
+
+<!-- <html>
 
     <head>
 
@@ -31,4 +146,4 @@
 
     </body>
     
-</html>
+</html> -->

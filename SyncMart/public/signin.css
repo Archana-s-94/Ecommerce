@@ -1,58 +1,10 @@
-/* .signin{
-    max-width: 400px;
-    margin: 50px auto;
-    padding:20px;
-    background-color: #f9f9f9;
-    border-radius: 10px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    text-align: center;
-    margin-bottom: 30px;
-    font-family: Arial, sans-serif;
-    align-items: center;
-}
-h1{
-    font-size: 2rem;
-    margin-bottom: 20px;
-    color: #333;
-}
-input{
-    width: 100%;
-    padding: 10px; 
-    font-size: 1rem;
-    border: 1px solid #ccc; 
-    box-sizing: border-box;
-    margin-bottom: 30px;
-}
-.signin-btn{
-    width: 100%;
-    padding: 10px;
-    font-size: 1rem;
-    color: white;
-    background-color: #007bff;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    margin-bottom: 10px;
-}
-button:hover {
-  background-color: #0056b3;
-}
-a{
-    color: #007bff;
-    text-decoration: none;
-    font-size: 1rem;
-     font-family: Arial, sans-serif;
 
-}
-p{
-    text-align: center;
-} */
 
-/* =========================
+/* /* =========================
    SIGN IN PAGE
 ========================= */
 
-.signin {
+/* .signin {
     max-width: 400px;
     margin: 50px auto;
     padding: 20px;
@@ -62,33 +14,33 @@ p{
     text-align: center;
     margin-bottom: 30px;
     font-family: Arial, sans-serif;
-}
+} */
 
 
 /* Sign In Heading */
 
-.signin h1 {
+/* .signin h1 {
     font-size: 2rem;
     margin-bottom: 20px;
     color: #333;
-}
+} */
 
 
 /* Sign In Inputs ONLY */
 
-.signin input {
+/* .signin input {
     width: 100%;
     padding: 10px;
     font-size: 1rem;
     border: 1px solid #ccc;
     box-sizing: border-box;
     margin-bottom: 30px;
-}
+} */
 
 
 /* Sign In Button ONLY */
 
-.signin .signin-btn {
+/* .signin .signin-btn {
     width: 100%;
     padding: 10px;
     font-size: 1rem;
@@ -98,28 +50,168 @@ p{
     border-radius: 6px;
     cursor: pointer;
     margin-bottom: 10px;
-}
+} */
 
 
 /* Sign In Button Hover */
 
-.signin .signin-btn:hover {
+/* .signin .signin-btn:hover {
     background-color: #0056b3;
-}
+} */
 
 
 /* Sign In Links ONLY */
 
-.signin a {
+/* .signin a {
     color: #007bff;
     text-decoration: none;
     font-size: 1rem;
     font-family: Arial, sans-serif;
-}
+} */
 
 
 /* Sign In Paragraph ONLY */
 
-.signin p {
+/* .signin p {
     text-align: center;
+} */
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #f5f6f7;
+    color: #222;
+}
+
+.signin-container {
+    min-height: 100vh;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    padding: 30px;
+}
+
+.signin-card {
+    width: 100%;
+    max-width: 420px;
+
+    background: white;
+
+    padding: 35px;
+
+    border: 1px solid #ddd;
+    border-radius: 8px;
+
+    box-shadow:
+        0 4px 14px
+        rgba(0, 0, 0, 0.08);
+}
+
+.signin-card h1 {
+    font-size: 28px;
+    margin-bottom: 10px;
+}
+
+.subtitle {
+    color: #666;
+
+    font-size: 14px;
+
+    line-height: 1.5;
+
+    margin-bottom: 25px;
+}
+
+.signin-card form {
+    display: flex;
+    flex-direction: column;
+}
+
+.signin-card label {
+    font-size: 14px;
+    font-weight: 600;
+
+    margin-bottom: 6px;
+}
+
+.signin-card input {
+    width: 100%;
+
+    padding: 11px 12px;
+
+    margin-bottom: 18px;
+
+    border: 1px solid #ccc;
+    border-radius: 5px;
+
+    font-size: 15px;
+}
+
+.signin-card input:focus {
+    outline: none;
+
+    border-color: #244b6b;
+}
+
+.signin-card button {
+    width: 100%;
+
+    padding: 12px;
+
+    border: none;
+    border-radius: 5px;
+
+    background: #244b6b;
+    color: white;
+
+    font-size: 15px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+.signin-card button:hover {
+    background: #1d3d57;
+}
+
+.error-message {
+    background: #fff0f0;
+
+    color: #a52828;
+
+    padding: 10px 12px;
+
+    margin-bottom: 18px;
+
+    border: 1px solid #e3b5b5;
+    border-radius: 5px;
+
+    font-size: 14px;
+}
+
+.signup-link {
+    text-align: center;
+
+    margin-top: 20px;
+
+    font-size: 14px;
+}
+
+.signup-link a {
+    color: #244b6b;
+
+    font-weight: 600;
+
+    text-decoration: none;
+}
+
+.signup-link a:hover {
+    text-decoration: underline;
 }
