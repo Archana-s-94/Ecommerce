@@ -4,66 +4,230 @@
 <head>
 
     <meta charset="UTF-8">
+
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0">
-    <title>My Orders</title>
-  <link rel="stylesheet"
-          href="../public/css/styles.css">
+
+    <title>My Orders - SyncMart</title>
+
     <link rel="stylesheet"
-          href="../public/orders.css">
+          href="/public/css/styles.css">
+
+    <link rel="stylesheet"
+          href="/public/orders.css">
 
 </head>
 
 <body>
 
-       <%- include("partials/navbar.ejs") %>
-       
-<div class="orders-container">
-    <h1>My Orders</h1>
-    <div id="ordersContainer">
-        <p>Loading orders...</p>
-    </div>
-</div>
+    <%- include("partials/navbar.ejs") %>
 
-<script>
-async function loadOrders() {
-    try {
-        const response =
-            await fetch("/api/orders");
-        const data =
-            await response.json();
-        const container =
-            document.getElementById(
-                "ordersContainer"
-            );
-        if (!data.success) {
-            container.innerHTML =
-                `<p>${data.message}</p>`;
-            return;
+
+    <main class="orders-container">
+
+        <h1>My Orders</h1>
+
+        <div id="ordersContainer">
+
+            <p>Loading orders...</p>
+
+        </div>
+
+    </main>
+
+
+    <%- include("partials/footer.ejs") %>
+
+
+    <script>
+
+        async function loadOrders() {
+
+            const container =
+                document.getElementById(
+                    "ordersContainer"
+                );
+
+            try {
+
+                const response =
+                    await fetch("/api/orders");
+
+                const data =
+                    await response.json();
+
+
+                if (!response.ok || !data.success) {
+
+                    container.innerHTML =
+                        `<p>${data.message || "Unable to load orders."}</p>`;
+
+                    return;
+                }
+
+
+                if (data.orders.length === 0) {
+
+                    container.innerHTML = `
+                        <div class="empty-orders">
+
+                            <h2>
+                                You have no orders yet.
+                            </h2>
+
+                            <p>
+                                Your completed purchases
+                                will appear here.
+                            </p>
+
+                            <a href="/products">
+                                Start Shopping
+                            </a>
+
+                        </div>
+                    `;
+
+                    return;
+                }
+
+
+                container.innerHTML =
+                    data.orders.map(function(order) {
+
+                        const itemsHtml =
+                            order.items.map(function(item) {
+
+                                const subtotal =
+                                    Number(item.price) *
+                                    Number(item.quantity);
+
+                                return `
+
+                                    <div class="order-product">
+
+                                        <div class="order-product-image">
+
+                                            <img
+                                                src="/public/images/${item.image}"
+                                                alt="${item.name}"
+                                            >
+
+                                        </div>
+
+
+                                        <div class="order-product-info">
+
+                                            <p class="order-brand">
+                                                ${item.brand}
+                                            </p>
+
+                                            <h3>
+                                                ${item.name}
+                                            </h3>
+
+                                            <p>
+                                                Price:
+                                                $${Number(item.price).toFixed(2)}
+                                            </p>
+
+                                            <p>
+                                                Quantity:
+                                                ${item.quantity}
+                                            </p>
+
+                                        </div>
+
+
+                                        <div class="order-product-subtotal">
+
+                                            <span>
+                                                Subtotal
+                                            </span>
+
+                                            <strong>
+                                                $${subtotal.toFixed(2)}
+                                            </strong>
+
+                                        </div>
+
+                                    </div>
+
+                                `;
+                            }).join("");
+
+
+                        return `
+
+                            <section class="order-card">
+
+                                <div class="order-header">
+
+                                    <div>
+
+                                        <h2>
+                                            Order #${order.id}
+                                        </h2>
+
+                                        <p>
+                                            ${new Date(
+                                                order.order_date
+                                            ).toLocaleDateString()}
+                                        </p>
+
+                                    </div>
+
+
+                                    <div class="order-status">
+                                        ${order.status}
+                                    </div>
+
+                                </div>
+
+
+                                <div class="order-products">
+
+                                    ${itemsHtml}
+
+                                </div>
+
+
+                                <div class="order-footer">
+
+                                    <span>
+                                        Order Total
+                                    </span>
+
+                                    <strong>
+                                        $${Number(
+                                            order.total_amount
+                                        ).toFixed(2)}
+                                    </strong>
+
+                                </div>
+
+                            </section>
+
+                        `;
+
+                    }).join("");
+
+
+            } catch (error) {
+
+                console.log(
+                    "Load orders error:",
+                    error
+                );
+
+                container.innerHTML =
+                    "<p>Something went wrong.</p>";
+            }
         }
-        if (data.orders.length === 0) {
-            container.innerHTML =
-                `<p>You have no orders yet.</p>`;
-            return;
-        }
-        container.innerHTML =
-            data.orders.map(order => `
-                <div class="order-card">
-                    <h2>Order #${order.id}</h2>
-                    <p>Total:$${order.total_amount}</p>
-                    <p>Status:${order.status}</p>
-                    <p>Date:${new Date(order.order_date).toLocaleDateString()} </p>
-                </div>
-            `).join("");
-    } catch (error) {
-        console.log(error);
-        document.getElementById( "ordersContainer" ).innerHTML ="<p>Something went wrong.</p>";
-    }
-}
-loadOrders();
-</script>
- 
-  <%- include(`partials/footer.ejs`) %>
+
+
+        loadOrders();
+
+    </script>
 
 </body>
 

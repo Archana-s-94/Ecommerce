@@ -677,56 +677,92 @@ app.get("/orders", function (req, res) {
 
 // Get all orders for logged in user
 
-app.get("/api/orders", function (req, res) {
+// ========================================
+// GET ALL ORDERS WITH ORDER ITEMS
+// ========================================
+
+app.get("/api/orders", requireLogin, function (req, res) {
   const userId = req.session.userId;
 
-  console.log("=================================");
-  console.log("ORDERS API");
-  console.log("User ID:", userId);
-  console.log("=================================");
+  const ordersSql = `
+    SELECT
+      id,
+      total_amount,
+      status,
+      order_date
+    FROM orders
+    WHERE user_id = ?
+    ORDER BY order_date DESC
+  `;
 
-  if (!userId) {
-    return res.status(401).json({
-      success: false,
-      message: "Please signin first",
-    });
-  }
-
-  const sql = `
-        SELECT
-            id,
-            total_amount,
-            status,
-            order_date
-        FROM orders
-        WHERE user_id = ?
-        ORDER BY order_date DESC
-    `;
-
-  conn.query(sql, [userId], function (err, results) {
-    if (err) {
-      console.log("=================================");
-      console.log("ORDERS DATABASE ERROR");
-      console.log(err);
-      console.log("SQL MESSAGE:", err.sqlMessage);
-      console.log("SQL:", err.sql);
-      console.log("=================================");
+  conn.query(ordersSql, [userId], function (ordersError, orders) {
+    if (ordersError) {
+      console.log("Orders database error:", ordersError);
 
       return res.status(500).json({
         success: false,
-        message: err.sqlMessage,
+        message: "Database error",
       });
     }
 
-    console.log("Orders found:", results);
+    if (orders.length === 0) {
+      return res.json({
+        success: true,
+        orders: [],
+      });
+    }
 
-    res.json({
-      success: true,
-      orders: results,
+    const orderIds = orders.map(function (order) {
+      return order.id;
+    });
+
+    const itemsSql = `
+        SELECT
+          order_items.order_id,
+          order_items.product_id,
+          order_items.quantity,
+          order_items.price,
+          products.name,
+          products.brand,
+          products.image
+        FROM order_items
+        JOIN products
+          ON order_items.product_id = products.id
+        WHERE order_items.order_id IN (?)
+        ORDER BY order_items.id ASC
+      `;
+
+    conn.query(itemsSql, [orderIds], function (itemsError, items) {
+      if (itemsError) {
+        console.log("Order items database error:", itemsError);
+
+        return res.status(500).json({
+          success: false,
+          message: "Database error",
+        });
+      }
+
+      const ordersWithItems = orders.map(function (order) {
+        const orderItems = items.filter(function (item) {
+          return Number(item.order_id) === Number(order.id);
+        });
+
+        return {
+          id: order.id,
+          total_amount: order.total_amount,
+          status: order.status,
+          order_date: order.order_date,
+          items: orderItems,
+        };
+      });
+
+      return res.json({
+        success: true,
+        orders: ordersWithItems,
+      });
     });
   });
 });
-
 // Get one order
 
 app.get("/api/orders/:id", function (req, res) {
