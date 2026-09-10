@@ -385,6 +385,66 @@ app.post("/cart/add/:id", function (req, res) {
   res.redirect("/cart");
 });
 
+// Increase cart quantity
+
+app.post("/cart/increase/:id", function (req, res) {
+  const productId = req.params.id;
+
+  const cart = req.session.cart || [];
+
+  const sql = `
+    SELECT stock
+    FROM products
+    WHERE id = ?
+  `;
+
+  conn.query(sql, [productId], function (err, result) {
+    if (err) {
+      console.log("Cart increase error:", err);
+
+      return res.status(500).send("Database error");
+    }
+
+    if (result.length === 0) {
+      return res.status(404).send("Product not found");
+    }
+
+    const stock = Number(result[0].stock);
+
+    const currentQuantity = cart.filter(function (id) {
+      return Number(id) === Number(productId);
+    }).length;
+
+    if (currentQuantity < stock) {
+      cart.push(productId);
+
+      req.session.cart = cart;
+    }
+
+    res.redirect("/cart");
+  });
+});
+
+// Decrease cart quantity
+
+app.post("/cart/decrease/:id", function (req, res) {
+  const productId = Number(req.params.id);
+
+  let cart = req.session.cart || [];
+
+  const index = cart.findIndex(function (id) {
+    return Number(id) === productId;
+  });
+
+  if (index !== -1) {
+    cart.splice(index, 1);
+  }
+
+  req.session.cart = cart;
+
+  res.redirect("/cart");
+});
+
 // Remove from cart
 
 app.post("/cart/remove/:id", function (req, res) {

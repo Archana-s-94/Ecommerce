@@ -2,96 +2,224 @@
 <html lang="en">
 
 <head>
-
     <meta charset="UTF-8">
+
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0">
-    <title>Shopping Cart - SyncMart</title>
-    <link  rel="stylesheet" href="../public/css/styles.css">
-    <link rel="stylesheet" href="../public/cart.css">
 
+    <title>Shopping Cart - SyncMart</title>
+
+    <link rel="stylesheet"
+          href="/public/css/styles.css">
+
+    <link rel="stylesheet"
+          href="/public/cart.css">
 </head>
 
 <body>
 
-       <%- include("partials/navbar.ejs") %>
+    <%- include("partials/navbar.ejs") %>
 
-<div class="cart-container">
 
-    <h1>Shopping Cart</h1>
-    <% if (products.length === 0) { %>
-        <div class="empty-cart">
-            <h2>Your cart is empty</h2>
-            <p>Add some products to your cart.</p>
-            <a href="/products" class="continue-btn">Continue Shopping</a>
-        </div>
+    <div class="cart-container">
 
-    <% } else { %>
+        <h1>Shopping Cart</h1>
 
-        <div class="cart-items">
-            <% products.forEach(function(product) { %>
-                <%
-                    const quantity = cart.filter(function(id) {
-                        return Number(id) === Number(product.id);
-                    }).length;
-                %>
 
-                <div class="cart-item">
+        <% if (!products || products.length === 0) { %>
 
-                    <div class="cart-product-info">
-                        <h2><%= product.name %></h2>
-                        <p>Brand: <%= product.brand %></p>
-                        <p>Price: $<%= Number(product.price).toFixed(2) %></p>
-                        <p>Quantity:<%= quantity %></p>
+            <div class="empty-cart">
+
+                <h2>Your cart is empty</h2>
+
+                <p>Add some products to your cart.</p>
+
+                <a href="/products"
+                   class="continue-btn">
+                    Continue Shopping
+                </a>
+
+            </div>
+
+        <% } else { %>
+
+
+            <div class="cart-items">
+
+
+                <% products.forEach(function(product) { %>
+
+                    <%
+                        const quantity = cart.filter(function(id) {
+                            return Number(id) === Number(product.id);
+                        }).length;
+
+                        const subtotal =
+                            Number(product.price) * quantity;
+                    %>
+
+
+                    <div class="cart-item">
+
+
+                        <!-- Product Image -->
+
+                        <div class="cart-image">
+
+                            <img
+                                src="/public/images/<%= product.image %>"
+                                alt="<%= product.name %>"
+                            >
+
+                        </div>
+
+
+                        <!-- Product Information -->
+
+                        <div class="cart-product-info">
+
+                            <p class="cart-brand">
+                                <%= product.brand %>
+                            </p>
+
+                            <h2>
+                                <%= product.name %>
+                            </h2>
+
+                            <p>
+                                Price:
+                                <strong>
+                                    $<%= Number(product.price).toFixed(2) %>
+                                </strong>
+                            </p>
+
+
+                            <!-- Quantity Controls -->
+
+                            <div class="quantity-control">
+
+                                <form
+                                    action="/cart/decrease/<%= product.id %>"
+                                    method="POST"
+                                >
+
+                                    <button
+                                        type="submit"
+                                        class="quantity-btn"
+                                    >
+                                        −
+                                    </button>
+
+                                </form>
+
+
+                                <span class="quantity-number">
+                                    <%= quantity %>
+                                </span>
+
+
+                                <form
+                                    action="/cart/increase/<%= product.id %>"
+                                    method="POST"
+                                >
+
+                                    <button
+                                        type="submit"
+                                        class="quantity-btn"
+                                        <% if (quantity >= product.stock) { %>
+                                            disabled
+                                        <% } %>
+                                    >
+                                        +
+                                    </button>
+
+                                </form>
+
+                            </div>
+
+
+                            <p class="stock-info">
+                                Available stock:
+                                <%= product.stock %>
+                            </p>
+
+                        </div>
+
+
+                        <!-- Subtotal -->
+
+                        <div class="cart-product-total">
+
+                            <span>Subtotal</span>
+
+                            <strong>
+                                $<%= subtotal.toFixed(2) %>
+                            </strong>
+
+                        </div>
+
+
+                        <!-- Remove -->
+
+                        <div class="cart-actions">
+
+                            <form
+                                action="/cart/remove/<%= product.id %>"
+                                method="POST"
+                            >
+
+                                <button
+                                    type="submit"
+                                    class="remove-btn"
+                                >
+                                    Remove
+                                </button>
+
+                            </form>
+
+                        </div>
+
+
                     </div>
 
-                    <div class="cart-product-total">
-                        <strong>
-                            $
-                            <%= (
-                                Number(product.price) *
-                                quantity
-                            ).toFixed(2) %>
-                        </strong>
-                    </div>
+                <% }); %>
 
-                    <div class="cart-actions">
-                        <form action="/cart/remove/<%= product.id %>" method="POST">
-                            <button
-                                type="submit"
-                                class="remove-btn">
-                                Remove
-                            </button>
-                        </form>
-                    </div>
+
+            </div>
+
+
+            <!-- Cart Summary -->
+
+            <div class="cart-summary">
+
+                <div class="cart-total">
+
+                    <span>Total:</span>
+
+                    <strong>
+                        $<%= Number(total).toFixed(2) %>
+                    </strong>
 
                 </div>
 
-            <% }); %>
 
-        </div>
+                <a
+                    href="/checkout"
+                    class="checkout-btn"
+                >
+                    Proceed to Checkout
+                </a>
 
-        <!-- Cart Total -->
-
-        <div class="cart-summary">
-
-            <div class="cart-total">
-                <span>Total:</span>
-                <strong>$<%= Number(total).toFixed(2) %></strong>
             </div>
 
-            <!-- Checkout Button -->
 
-            <a href="/checkout" class="checkout-btn">Proceed to Checkout</a>
+        <% } %>
 
-        </div>
 
-    <% } %>
+    </div>
 
-</div>
-
-  <%- include(`partials/footer.ejs`) %>
-  
 </body>
-
+<%- include(`partials/footer.ejs`) %>
 </html>
+
+
