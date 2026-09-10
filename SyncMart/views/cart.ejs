@@ -49,15 +49,12 @@
 
                 <% products.forEach(function(product) { %>
 
-                    <%
-                        const quantity = cart.filter(function(id) {
-                            return Number(id) === Number(product.id);
-                        }).length;
+                   <%
+    const quantity = Number(product.quantity);
 
-                        const subtotal =
-                            Number(product.price) * quantity;
-                    %>
-
+    const subtotal =
+        Number(product.price) * quantity;
+%>  
 
                     <div class="cart-item">
 
