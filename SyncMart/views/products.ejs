@@ -56,12 +56,15 @@
             <div class="product-card">
 
                 <!-- Wishlist -->
-
-                <form action="/wishlist/add/<%= product.id %>" method="POST">
-
-                    <button type="submit" class="wishlist-btn">♡</button>
-
-                </form>
+<form action="/wishlist/add/<%= product.id %>" method="POST">
+    <button
+        type="submit"
+        class="wishlist-btn"
+        title="Add to Wishlist"
+    >
+        ♡
+    </button>
+</form>
 
                 <!-- Image -->
 
@@ -134,6 +137,8 @@
         <% }); %>
 
     </div>
+
+   
 
   <%- include(`partials/footer.ejs`) %>
   

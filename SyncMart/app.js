@@ -134,28 +134,27 @@ app.get("/categories", function (req, res) {
   });
 });
 
-// Wishlist
+// ========================================
+// WISHLIST - DATABASE BASED
+// ========================================
 
-app.get("/wishlist", function (req, res) {
-  const wishlist = req.session.wishlist || [];
-
-  if (wishlist.length === 0) {
-    return res.render("wishlist", {
-      products: [],
-    });
-  }
+// View wishlist
+app.get("/wishlist", requireLogin, function (req, res) {
+  const userId = req.session.userId;
 
   const sql = `
-        SELECT *
-        FROM products
-        WHERE id IN (?)
-    `;
+    SELECT products.*
+    FROM wishlist
+    JOIN products
+      ON wishlist.product_id = products.id
+    WHERE wishlist.user_id = ?
+    ORDER BY wishlist.created_at DESC
+  `;
 
-  conn.query(sql, [wishlist], function (err, result) {
+  conn.query(sql, [userId], function (err, result) {
     if (err) {
-      console.log(err);
-
-      return res.send("Database error");
+      console.log("Wishlist database error:", err);
+      return res.status(500).send("Database error");
     }
 
     res.render("wishlist", {
@@ -164,41 +163,117 @@ app.get("/wishlist", function (req, res) {
   });
 });
 
-// Add to wishlist
-
-app.post("/wishlist/add/:id", function (req, res) {
+// Add product to wishlist
+app.post("/wishlist/add/:id", requireLogin, function (req, res) {
+  const userId = req.session.userId;
   const productId = req.params.id;
 
-  if (!req.session.wishlist) {
-    req.session.wishlist = [];
-  }
+  const sql = `
+    INSERT IGNORE INTO wishlist
+    (user_id, product_id)
+    VALUES (?, ?)
+  `;
 
-  // Prevent duplicate products
+  conn.query(sql, [userId, productId], function (err) {
+    if (err) {
+      console.log("Add wishlist error:", err);
+      return res.status(500).send("Database error");
+    }
 
-  if (!req.session.wishlist.includes(productId)) {
-    req.session.wishlist.push(productId);
-  }
+    console.log("Product added to wishlist:", productId, "User:", userId);
 
-  console.log("Product added to wishlist:", productId);
-
-  res.redirect("/wishlist");
-});
-
-// Remove from whishlist
-
-app.post("/wishlist/remove/:id", function (req, res) {
-  const productId = Number(req.params.id);
-
-  let wishlist = req.session.wishlist || [];
-
-  wishlist = wishlist.filter(function (id) {
-    return Number(id) !== productId;
+    res.redirect("/wishlist");
   });
-
-  req.session.wishlist = wishlist;
-
-  res.redirect("/wishlist");
 });
+
+// Remove product from wishlist
+app.post("/wishlist/remove/:id", requireLogin, function (req, res) {
+  const userId = req.session.userId;
+  const productId = req.params.id;
+
+  const sql = `
+    DELETE FROM wishlist
+    WHERE user_id = ?
+    AND product_id = ?
+  `;
+
+  conn.query(sql, [userId, productId], function (err) {
+    if (err) {
+      console.log("Remove wishlist error:", err);
+      return res.status(500).send("Database error");
+    }
+
+    console.log("Product removed from wishlist:", productId, "User:", userId);
+
+    res.redirect("/wishlist");
+  });
+});
+
+// // Wishlist
+
+// app.get("/wishlist", function (req, res) {
+//   const wishlist = req.session.wishlist || [];
+
+//   if (wishlist.length === 0) {
+//     return res.render("wishlist", {
+//       products: [],
+//     });
+//   }
+
+//   const sql = `
+//         SELECT *
+//         FROM products
+//         WHERE id IN (?)
+//     `;
+
+//   conn.query(sql, [wishlist], function (err, result) {
+//     if (err) {
+//       console.log(err);
+
+//       return res.send("Database error");
+//     }
+
+//     res.render("wishlist", {
+//       products: result,
+//     });
+//   });
+// });
+
+// // Add to wishlist
+
+// app.post("/wishlist/add/:id", function (req, res) {
+//   const productId = req.params.id;
+
+//   if (!req.session.wishlist) {
+//     req.session.wishlist = [];
+//   }
+
+//   // Prevent duplicate products
+
+//   if (!req.session.wishlist.includes(productId)) {
+//     req.session.wishlist.push(productId);
+//   }
+
+//   console.log("Product added to wishlist:", productId);
+
+//   res.redirect("/wishlist");
+// });
+
+// // Remove from whishlist
+
+// app.post("/wishlist/remove/:id", function (req, res) {
+//   const productId = Number(req.params.id);
+
+//   let wishlist = req.session.wishlist || [];
+
+//   wishlist = wishlist.filter(function (id) {
+//     return Number(id) !== productId;
+//   });
+
+//   req.session.wishlist = wishlist;
+
+//   res.redirect("/wishlist");
+// });
 
 // Cart
 

@@ -2,6 +2,407 @@
 <html lang="en">
 
 <head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Checkout - SyncMart</title>
+
+    <link rel="stylesheet"
+          href="/public/css/styles.css">
+
+    <link rel="stylesheet"
+          href="/public/checkout.css">
+</head>
+
+
+<body>
+
+    <%- include("partials/navbar.ejs") %>
+
+
+    <main class="checkout-page">
+
+        <h1 class="checkout-title">
+            Checkout
+        </h1>
+
+
+        <div class="checkout-layout">
+
+
+            <!-- =========================
+                 LEFT SIDE - ORDER SUMMARY
+            ========================== -->
+
+            <section class="order-section">
+
+                <h2>
+                    Order Summary
+                </h2>
+
+
+                <% if (products && products.length > 0) { %>
+
+
+                    <% products.forEach(function(product) { %>
+
+                        <%
+                            const quantity = cart.filter(function(id) {
+                                return Number(id) === Number(product.id);
+                            }).length;
+
+                            const subtotal =
+                                Number(product.price) * quantity;
+                        %>
+
+
+                        <div class="checkout-product">
+
+
+                            <!-- Product Image -->
+
+                            <div class="checkout-product-image">
+
+                                <img
+                                    src="/public/images/<%= product.image %>"
+                                    alt="<%= product.name %>"
+                                >
+
+                            </div>
+
+
+                            <!-- Product Information -->
+
+                            <div class="checkout-product-info">
+
+                                <p class="checkout-brand">
+                                    <%= product.brand %>
+                                </p>
+
+
+                                <h3>
+                                    <%= product.name %>
+                                </h3>
+
+
+                                <p>
+                                    Price:
+                                    <strong>
+                                        $<%= Number(product.price).toFixed(2) %>
+                                    </strong>
+                                </p>
+
+
+                                <p>
+                                    Quantity:
+                                    <strong>
+                                        <%= quantity %>
+                                    </strong>
+                                </p>
+
+
+                                <% if (product.stock > 0) { %>
+
+                                    <p class="checkout-stock">
+                                        In Stock
+                                    </p>
+
+                                <% } else { %>
+
+                                    <p class="checkout-out-stock">
+                                        Out of Stock
+                                    </p>
+
+                                <% } %>
+
+                            </div>
+
+
+                            <!-- Product Subtotal -->
+
+                            <div class="checkout-subtotal">
+
+                                $<%= subtotal.toFixed(2) %>
+
+                            </div>
+
+
+                        </div>
+
+                    <% }); %>
+
+
+                <% } else { %>
+
+
+                    <div class="empty-checkout">
+
+                        <h3>
+                            Your cart is empty
+                        </h3>
+
+                        <p>
+                            Add products to your cart before checkout.
+                        </p>
+
+                        <a href="/products">
+                            Browse Products
+                        </a>
+
+                    </div>
+
+
+                <% } %>
+
+
+            </section>
+
+
+
+            <!-- =========================
+                 RIGHT SIDE - ORDER TOTAL
+            ========================== -->
+
+            <aside class="payment-summary">
+
+                <h2>
+                    Order Total
+                </h2>
+
+
+                <div class="summary-row">
+
+                    <span>
+                        Subtotal
+                    </span>
+
+                    <span>
+                        $<%= Number(total).toFixed(2) %>
+                    </span>
+
+                </div>
+
+
+                <div class="summary-row">
+
+                    <span>
+                        Delivery
+                    </span>
+
+                    <span class="free-delivery">
+                        FREE
+                    </span>
+
+                </div>
+
+
+                <hr>
+
+
+                <div class="summary-total">
+
+                    <span>
+                        Total
+                    </span>
+
+                    <span>
+                        $<%= Number(total).toFixed(2) %>
+                    </span>
+
+                </div>
+
+
+                <!-- Store total in HTML so JavaScript can read it safely -->
+
+                <input
+                    type="hidden"
+                    id="checkout-total"
+                    value="<%= Number(total) %>"
+                >
+
+
+                <button
+                    type="button"
+                    class="place-order-btn"
+                    onclick="placeOrder()"
+                    <% if (!products || products.length === 0) { %>
+                        disabled
+                    <% } %>
+                >
+                    Place Order
+                </button>
+
+
+                <a
+                    href="/cart"
+                    class="back-cart"
+                >
+                    ← Back to Cart
+                </a>
+
+
+                <div
+                    id="order-message"
+                    class="order-message">
+                </div>
+
+
+            </aside>
+
+
+        </div>
+
+    </main>
+
+
+    <%- include("partials/footer.ejs") %>
+
+
+
+    <!-- =========================
+         PLACE ORDER JAVASCRIPT
+    ========================== -->
+
+    <script>
+
+        async function placeOrder() {
+
+            const button =
+                document.querySelector(".place-order-btn");
+
+            const message =
+                document.getElementById("order-message");
+
+            const totalElement =
+                document.getElementById("checkout-total");
+
+
+
+            if (!totalElement) {
+
+                message.textContent =
+                    "Unable to read order total.";
+
+                return;
+
+            }
+
+
+
+            const totalAmount =
+                Number(totalElement.value);
+
+
+
+            if (!totalAmount || totalAmount <= 0) {
+
+                message.textContent =
+                    "Invalid order total.";
+
+                return;
+
+            }
+
+
+
+            button.disabled = true;
+
+            button.textContent =
+                "Placing Order...";
+
+
+
+            try {
+
+                const response =
+                    await fetch("/api/orders", {
+
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+
+                        body: JSON.stringify({
+                            totalAmount: totalAmount
+                        })
+
+                    });
+
+
+
+                const data =
+                    await response.json();
+
+
+
+                if (!response.ok || !data.success) {
+
+                    message.textContent =
+                        data.message ||
+                        "Unable to place order.";
+
+                    button.disabled = false;
+
+                    button.textContent =
+                        "Place Order";
+
+                    return;
+
+                }
+
+
+
+                message.textContent =
+                    "Order placed successfully!";
+
+
+
+                setTimeout(function () {
+
+                    window.location.href =
+                        "/orders";
+
+                }, 800);
+
+
+
+            } catch (error) {
+
+                console.log(
+                    "Place order error:",
+                    error
+                );
+
+
+
+                message.textContent =
+                    "Something went wrong. Please try again.";
+
+
+
+                button.disabled = false;
+
+                button.textContent =
+                    "Place Order";
+
+            }
+
+        }
+
+    </script>
+
+
+</body>
+
+</html>
+
+<!-- <!DOCTYPE html>
+<html lang="en">
+
+<head>
 
     <meta charset="UTF-8">
     <meta name="viewport"
@@ -50,14 +451,14 @@
 
         <!-- Total -->
 
-        <div class="checkout-total">
+        <!-- <div class="checkout-total">
             <strong>Total:</strong>
             <strong>$<%= Number(total).toFixed(2) %></strong>
-        </div>
+        </div> -->
 
         <!-- Place Order -->
 
-        <button
+        <!-- <button
             type="button"
             class="place-order-btn"
             onclick="placeOrder()">
@@ -105,4 +506,4 @@ async function placeOrder() {
   
 </body>
 
-</html>
+</html> --> 
