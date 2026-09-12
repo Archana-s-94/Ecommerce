@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Add Product</title>
+
+    <link rel="stylesheet" href="/public/css/styles.css" />
+    <link rel="stylesheet" href="/public/admin.css" />
+  </head>
+
+  <body>
+    <%- include("partials/navbar.ejs") %>
+
+    <div class="admin-container">
+      <div class="profile-card">
+        <h1>Add Product</h1>
+
+        <form action="/admin/products/add" method="POST">
+          <div class="profile-form-group">
+            <label>Product Name</label>
+
+            <input type="text" name="name" required />
+          </div>
+
+          <div class="profile-form-group">
+            <label>Brand</label>
+
+            <input type="text" name="brand" required />
+          </div>
+
+          <div class="profile-form-group">
+            <label>Model</label>
+
+            <input type="text" name="model" />
+          </div>
+
+          <div class="profile-form-group">
+            <label>Price</label>
+
+            <input type="number" name="price" step="0.01" min="0" required />
+          </div>
+
+          <div class="profile-form-group">
+            <label>Stock</label>
+
+            <input type="number" name="stock" min="0" required />
+          </div>
+
+          <div class="profile-form-group">
+            <label>Category ID</label>
+
+            <select name="category_id" required>
+              <option value="1">Mobiles</option>
+
+              <option value="2">Laptops</option>
+            </select>
+          </div>
+
+          <div class="profile-form-group">
+            <label>Image Filename</label>
+
+            <input
+              type="text"
+              name="image"
+              placeholder="example.jpg"
+              required
+            />
+          </div>
+
+          <div class="profile-form-group">
+            <label>RAM</label>
+
+            <input type="text" name="ram" />
+          </div>
+
+          <div class="profile-form-group">
+            <label>Storage</label>
+
+            <input type="text" name="storage" />
+          </div>
+
+          <div class="profile-form-group">
+            <label>Processor</label>
+
+            <input type="text" name="processor" />
+          </div>
+
+          <div class="profile-form-group">
+            <label>Operating System</label>
+
+            <input type="text" name="os" />
+          </div>
+
+          <div class="profile-form-group">
+            <label>Description</label>
+
+            <textarea name="description" rows="5"></textarea>
+          </div>
+
+          <button type="submit" class="update-profile-btn">Add Product</button>
+        </form>
+      </div>
+    </div>
+
+    <%- include("partials/footer.ejs") %>
+  </body>
+</html>

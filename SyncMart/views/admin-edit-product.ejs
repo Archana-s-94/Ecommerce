@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Edit Product</title>
+
+  <link rel="stylesheet" href="/public/css/styles.css">
+  <link rel="stylesheet" href="/public/admin.css">
+</head>
+
+<body>
+
+  <%- include("partials/navbar.ejs") %>
+
+  <div class="admin-container">
+
+    <div class="profile-card">
+
+      <h1>Edit Product</h1>
+
+      <form
+        action="/admin/products/edit/<%= product.id %>"
+        method="POST"
+      >
+
+        <div class="profile-form-group">
+          <label>Product Name</label>
+
+          <input
+            type="text"
+            name="name"
+            value="<%= product.name %>"
+            required
+          >
+        </div>
+
+
+        <div class="profile-form-group">
+          <label>Brand</label>
+
+          <input
+            type="text"
+            name="brand"
+            value="<%= product.brand %>"
+            required
+          >
+        </div>
+
+
+        <div class="profile-form-group">
+          <label>Model</label>
+
+          <input
+            type="text"
+            name="model"
+            value="<%= product.model || '' %>"
+          >
+        </div>
+
+
+        <div class="profile-form-group">
+          <label>Price</label>
+
+          <input
+            type="number"
+            name="price"
+            step="0.01"
+            min="0"
+            value="<%= product.price %>"
+            required
+          >
+        </div>
+
+
+        <div class="profile-form-group">
+          <label>Stock</label>
+
+          <input
+            type="number"
+            name="stock"
+            min="0"
+            value="<%= product.stock %>"
+            required
+          >
+        </div>
+
+
+        <div class="profile-form-group">
+          <label>Category</label>
+
+          <select name="category_id" required>
+
+            <option
+              value="1"
+              <%= Number(product.category_id) === 1 ? "selected" : "" %>
+            >
+              Mobiles
+            </option>
+
+            <option
+              value="2"
+              <%= Number(product.category_id) === 2 ? "selected" : "" %>
+            >
+              Laptops
+            </option>
+
+          </select>
+        </div>
+
+
+        <div class="profile-form-group">
+          <label>Image Filename</label>
+
+          <input
+            type="text"
+            name="image"
+            value="<%= product.image %>"
+            required
+          >
+        </div>
+
+
+        <div class="profile-form-group">
+          <label>RAM</label>
+
+          <input
+            type="text"
+            name="ram"
+            value="<%= product.ram || '' %>"
+          >
+        </div>
+
+
+        <div class="profile-form-group">
+          <label>Storage</label>
+
+          <input
+            type="text"
+            name="storage"
+            value="<%= product.storage || '' %>"
+          >
+        </div>
+
+
+        <div class="profile-form-group">
+          <label>Processor</label>
+
+          <input
+            type="text"
+            name="processor"
+            value="<%= product.processor || '' %>"
+          >
+        </div>
+
+
+        <div class="profile-form-group">
+          <label>Operating System</label>
+
+          <input
+            type="text"
+            name="os"
+            value="<%= product.os || '' %>"
+          >
+        </div>
+
+
+        <div class="profile-form-group">
+          <label>Description</label>
+
+          <textarea
+            name="description"
+            rows="5"
+          ><%= product.description || '' %></textarea>
+
+        </div>
+
+
+        <button
+          type="submit"
+          class="update-profile-btn"
+        >
+          Save Product Changes
+        </button>
+
+      </form>
+
+    </div>
+
+  </div>
+
+  <%- include("partials/footer.ejs") %>
+
+</body>
+
+</html> 

@@ -1,74 +1,47 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
 
-<head>
-
-    <meta charset="UTF-8">
-
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <title>My Orders - SyncMart</title>
 
-    <link rel="stylesheet"
-          href="/public/css/styles.css">
+    <link rel="stylesheet" href="/public/css/styles.css" />
 
-    <link rel="stylesheet"
-          href="/public/orders.css">
+    <link rel="stylesheet" href="/public/orders.css" />
+  </head>
 
-</head>
-
-<body>
-
+  <body>
     <%- include("partials/navbar.ejs") %>
 
-
     <main class="orders-container">
+      <h1>My Orders</h1>
 
-        <h1>My Orders</h1>
-
-        <div id="ordersContainer">
-
-            <p>Loading orders...</p>
-
-        </div>
-
+      <div id="ordersContainer">
+        <p>Loading orders...</p>
+      </div>
     </main>
-
 
     <%- include("partials/footer.ejs") %>
 
-
     <script>
+      async function loadOrders() {
+        const container = document.getElementById("ordersContainer");
 
-        async function loadOrders() {
+        try {
+          const response = await fetch("/api/orders");
 
-            const container =
-                document.getElementById(
-                    "ordersContainer"
-                );
+          const data = await response.json();
 
-            try {
+          if (!response.ok || !data.success) {
+            container.innerHTML = `<p>${data.message || "Unable to load orders."}</p>`;
 
-                const response =
-                    await fetch("/api/orders");
+            return;
+          }
 
-                const data =
-                    await response.json();
-
-
-                if (!response.ok || !data.success) {
-
-                    container.innerHTML =
-                        `<p>${data.message || "Unable to load orders."}</p>`;
-
-                    return;
-                }
-
-
-                if (data.orders.length === 0) {
-
-                    container.innerHTML = `
+          if (data.orders.length === 0) {
+            container.innerHTML = `
                         <div class="empty-orders">
 
                             <h2>
@@ -87,21 +60,16 @@
                         </div>
                     `;
 
-                    return;
-                }
+            return;
+          }
 
+          container.innerHTML = data.orders
+            .map(function (order) {
+              const itemsHtml = order.items
+                .map(function (item) {
+                  const subtotal = Number(item.price) * Number(item.quantity);
 
-                container.innerHTML =
-                    data.orders.map(function(order) {
-
-                        const itemsHtml =
-                            order.items.map(function(item) {
-
-                                const subtotal =
-                                    Number(item.price) *
-                                    Number(item.quantity);
-
-                                return `
+                  return `
 
                                     <div class="order-product">
 
@@ -153,10 +121,10 @@
                                     </div>
 
                                 `;
-                            }).join("");
+                })
+                .join("");
 
-
-                        return `
+              return `
 
                             <section class="order-card">
 
@@ -170,17 +138,16 @@
 
                                         <p>
                                             ${new Date(
-                                                order.order_date
+                                              order.order_date,
                                             ).toLocaleDateString()}
                                         </p>
 
                                     </div>
 
 
-                                    <div class="order-status">
-                                        ${order.status}
-                                    </div>
-
+                                    <div class="order-status status-${order.status.toLowerCase()}">
+    ${order.status}
+</div>
                                 </div>
 
 
@@ -198,9 +165,9 @@
                                     </span>
 
                                     <strong>
-                                        $${Number(
-                                            order.total_amount
-                                        ).toFixed(2)}
+                                        $${Number(order.total_amount).toFixed(
+                                          2,
+                                        )}
                                     </strong>
 
                                 </div>
@@ -208,27 +175,16 @@
                             </section>
 
                         `;
+            })
+            .join("");
+        } catch (error) {
+          console.log("Load orders error:", error);
 
-                    }).join("");
-
-
-            } catch (error) {
-
-                console.log(
-                    "Load orders error:",
-                    error
-                );
-
-                container.innerHTML =
-                    "<p>Something went wrong.</p>";
-            }
+          container.innerHTML = "<p>Something went wrong.</p>";
         }
+      }
 
-
-        loadOrders();
-
+      loadOrders();
     </script>
-
-</body>
-
+  </body>
 </html>

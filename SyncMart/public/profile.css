@@ -1,12 +1,12 @@
 body {
     font-family: Arial, sans-serif;
     background-color: #f5f5f5;
-    margin: 0 auto;
+    margin: 0;
     padding: 0;
 }
 
 .profile-container {
-    width: 80%;
+    width: 90%;
     max-width: 600px;
     margin: 50px auto;
 }
@@ -14,30 +14,131 @@ body {
 .profile-container h1 {
     text-align: center;
     margin-bottom: 30px;
+    color: #222;
 }
 
 .profile-card {
     background: white;
-    padding: 30px;
+    padding: 35px;
     border-radius: 10px;
     box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
 }
 
-.profile-row {
-    display: flex;
-    justify-content: space-between;
-    padding: 15px 0;
-    border-bottom: 1px solid #ddd;
+.profile-form-group {
+    margin-bottom: 22px;
 }
 
-.profile-row:last-child {
-    border-bottom: none;
-}
-
-.profile-row strong {
+.profile-form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
     color: #333;
 }
 
-.profile-row span {
-    color: #666;
+.profile-form-group input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 15px;
+    box-sizing: border-box;
+}
+
+.profile-form-group input:focus {
+    outline: none;
+    border-color: #0b2b4a;
+}
+
+.update-profile-btn {
+    width: 100%;
+    border: none;
+    padding: 13px;
+    border-radius: 6px;
+    background: #0b2b4a;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.update-profile-btn:hover {
+    opacity: 0.9;
+}
+
+.profile-message {
+    background: white;
+    border-left: 4px solid #0b2b4a;
+    padding: 14px;
+    margin-bottom: 20px;
+    border-radius: 6px;
+    text-align: center;
+}
+.password-card {
+    margin-top: 30px;
+}
+
+.password-card h2 {
+    text-align: center;
+    margin-top: 0;
+    margin-bottom: 25px;
+    color: #222;
+}
+/* Mobile */
+
+@media (max-width: 768px) {
+
+    .profile-container {
+        width: 92%;
+        margin: 30px auto;
+    }
+
+    .profile-container h1 {
+        font-size: 28px;
+    }
+
+    .profile-card {
+        padding: 25px;
+    }
+
+    .profile-form-group input {
+        width: 100%;
+    }
+
+    .update-profile-btn {
+        width: 100%;
+    }
+
+    .password-card {
+        margin-top: 25px;
+    }
+}
+
+
+@media (max-width: 480px) {
+
+    .profile-container {
+        width: 95%;
+        margin: 20px auto;
+    }
+
+    .profile-card {
+        padding: 20px 15px;
+    }
+
+    .profile-container h1 {
+        font-size: 25px;
+    }
+
+    .password-card h2 {
+        font-size: 21px;
+    }
+
+    .profile-form-group label {
+        font-size: 14px;
+    }
+
+    .profile-form-group input {
+        padding: 11px;
+        font-size: 14px;
+    }
 }

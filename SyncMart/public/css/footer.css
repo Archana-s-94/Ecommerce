@@ -1,61 +1,117 @@
 /* Footer */
-
 .site-footer {
-    background: #102a43;
+    width: 100%;
+    background-color: #102a43;
     color: white;
-    margin-top: 80px;
+    margin-top: 70px;
     padding-top: 45px;
 }
 
 .footer-content {
     width: 90%;
     max-width: 1200px;
-    margin: auto;
+    margin: 0 auto;
     display: grid;
-    grid-template-columns:
-        2fr 1fr 1fr 1.5fr;
+    grid-template-columns: 2fr 1fr 1fr 1.5fr;
     gap: 40px;
 }
 
 .footer-section h2 {
-    color: #00a8cc;
+    color: #06B6D4;
+    font-size: 24px;
     margin-bottom: 15px;
 }
 
 .footer-section h3 {
+    color: white;
+    font-size: 17px;
     margin-bottom: 15px;
 }
 
 .footer-section p {
     color: #d9e2ec;
+    font-size: 14px;
     line-height: 1.6;
+    margin-bottom: 8px;
 }
 
 .footer-section a {
     display: block;
     color: #d9e2ec;
     text-decoration: none;
+    font-size: 14px;
     margin-bottom: 10px;
-    transition: 0.3s;
 }
 
 .footer-section a:hover {
-    color: #00a8cc;
-    transform: translateX(3px);
+    color: #06B6D4;
 }
 
-/* Footer Bottom*/
+/* Footer Bottom */
 
 .footer-bottom {
-    margin-top: 40px;
-    padding: 18px;
-    text-align: center;
-    border-top:
-        1px solid rgba(255, 255, 255, 0.15);
+    width: 100%;
+    margin-top: 35px;
+    padding: 18px 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .footer-bottom p {
     margin: 0;
+    padding: 0;
+    width: 100%;
+    text-align: center;
     color: #bcccdc;
-    font-size: 14px;
+    font-size: 13px;
+}
+
+
+/* Footer Tablet */
+
+@media (max-width: 768px) {
+
+    .footer-content {
+        width: calc(100% - 32px);
+        margin: 0 16px;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+    }
+
+}
+
+
+/*Footer Mobile*/
+
+@media (max-width: 480px) {
+
+    .site-footer {
+        margin-top: 40px;
+        padding-top: 30px;
+    }
+
+    .footer-content {
+        width: calc(100% - 32px);
+        margin: 0 16px;
+        grid-template-columns: 1fr;
+        gap: 25px;
+        text-align: center;
+    }
+
+    .footer-section h2 {
+        font-size: 22px;
+    }
+
+    .footer-section h3 {
+        font-size: 16px;
+    }
+
+    .footer-bottom {
+        margin-top: 25px;
+
+        padding: 15px 10px;
+    }
+
 }

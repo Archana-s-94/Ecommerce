@@ -1,130 +1,71 @@
+
 <nav class="navbar">
 
     <div class="logo">
-
-        <a href="/home">
-            SyncMart
-        </a>
-
+        <a href="/home">SyncMart</a>
     </div>
 
+    <button
+        type="button"
+        class="menu-toggle"
+        id="menuToggle"
+        aria-label="Toggle navigation"
+        aria-expanded="false"
+    >
+        ☰
+    </button>
 
-    <ul class="nav-links">
+    <div class="nav-menu" id="navMenu">
 
-        <li>
-            <a href="/home">
-                Home
-            </a>
-        </li>
+        <ul class="nav-links">
 
-        <li>
-            <a href="/products">
-                Products
-            </a>
-        </li>
-
-        <li>
-            <a href="/categories">
-                Categories
-            </a>
-        </li>
-
-        <li>
-            <a href="/wishlist">
-                Wishlist
-            </a>
-        </li>
-
-        <li>
-            <a href="/cart">
-                Cart
-            </a>
-        </li>
-
-
-        <% if (signedin) { %>
-
-            <li>
-                <a href="/orders">
-                    Orders
-                </a>
-            </li>
-
-            <li>
-                <a href="/profile">
-                    <%= username %>
-                </a>
-            </li>
-
-            <li>
-
-                <form
-                    action="/signout"
-                    method="POST"
-                    class="signout-form"
-                >
-
-                    <button
-                        type="submit"
-                        class="signout-button"
-                    >
-                        Sign Out
-                    </button>
-
-                </form>
-
-            </li>
-
-        <% } else { %>
-
-            <li>
-                <a href="/signin">
-                    Sign In
-                </a>
-            </li>
-
-        <% } %>
-
-    </ul>
-
-
-    <div class="search-container">
-
-        <form
-            action="/search"
-            method="GET"
-        >
-
-            <input
-                type="text"
-                name="query"
-                placeholder="Search products..."
-                value="<%= typeof searchQuery !== 'undefined' ? searchQuery : '' %>"
-            >
-
-            <button type="submit">
-                🔍
-            </button>
-
-        </form>
-
-    </div>
-
-</nav>
-
-
-<!-- <nav class="navbar">
-
-     <div class="logo">
-        <a href="/">SyncMart</a>
-    </div>
-
-    <ul class="nav-links">
             <li><a href="/home">Home</a></li>
             <li><a href="/products">Products</a></li>
             <li><a href="/categories">Categories</a></li>
+            <li><a href="/wishlist">Wishlist</a></li>
+            <li><a href="/cart">Cart</a></li>
 
-  <div class="search-container">
+            <% if (signedin) { %>
+
+                <li><a href="/orders">Orders</a></li>
+
+                <% if (role === "admin") { %>
+                    <li><a href="/admin">Admin</a></li>
+                    <li><a href="/admin/orders">Admin Orders</a></li>
+                <% } %>
+
+                <li>
+                    <a href="/profile">
+                        <%= username %>
+                    </a>
+                </li>
+
+                <li>
+                    <form
+                        action="/signout"
+                        method="POST"
+                        class="signout-form"
+                    >
+                        <button
+                            type="submit"
+                            class="signout-button"
+                        >
+                            Sign Out
+                        </button>
+                    </form>
+                </li>
+
+            <% } else { %>
+
+                <li>
+                    <a href="/signin">Sign In</a>
+                </li>
+
+            <% } %>
+
+        </ul>
+
+        <div class="navbar-search">
 
     <form action="/search" method="GET">
 
@@ -136,51 +77,32 @@
         >
 
         <button type="submit">🔍</button>
-        
+
     </form>
 
 </div>
 
-   <ul class="nav-links">
-             <li><a href="/wishlist">Wishlist</a></li>  
-             <li><a href="/cart">Cart</a></li>
-             <li><a href="/orders">Orders</a></li>
-             <li><a href="/profile">Profile</a></li>
-             <li><a href="/signin">Sign In</a></li></ul>
-        
+    </div>
 
-             <% if (signedin) { %>
-
-  <a href="/profile">
-    <%= username %>
-  </a>
-
-  <a href="/orders">
-    Orders
-  </a>
-
-  <form
-    action="/signout"
-    method="POST"
-    class="signout-form"
-  >
-
-    <button
-      type="submit"
-      class="signout-button"
-    >
-      Sign Out
-    </button>
-
-  </form>
-
-<% } else { %>
-
-  <a href="/signin">
-    Sign In
-  </a>
-
-<% } %>
 </nav>
 
-     -->
+<script>
+    const menuToggle = document.getElementById("menuToggle");
+    const navMenu = document.getElementById("navMenu");
+
+    menuToggle.addEventListener("click", function () {
+
+        navMenu.classList.toggle("active");
+
+        const isOpen =
+            navMenu.classList.contains("active");
+
+        menuToggle.setAttribute(
+            "aria-expanded",
+            isOpen
+        );
+
+        menuToggle.textContent =
+            isOpen ? "✕" : "☰";
+    });
+</script>

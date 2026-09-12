@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Admin Dashboard</title>
+
+  <link rel="stylesheet" href="/public/css/styles.css">
+  <link rel="stylesheet" href="/public/admin.css">
+</head>
+
+<body>
+
+  <%- include("partials/navbar.ejs") %>
+
+  <div class="admin-container">
+<% if (message) { %>
+
+  <div class="admin-message <%= messageType %>">
+    <%= message %>
+  </div>
+
+<% } %>
+<div class="dashboard-summary">
+
+  <a href="/admin" class="summary-card-link">
+    <div class="summary-card">
+      <h3>Total Products</h3>
+      <p><%= totalProducts %></p>
+    </div>
+  </a>
+
+  <a href="/admin/orders" class="summary-card-link">
+    <div class="summary-card">
+      <h3>Total Orders</h3>
+      <p><%= totalOrders %></p>
+    </div>
+  </a>
+
+  <div class="summary-card">
+    <h3>Total Customers</h3>
+    <p><%= totalCustomers %></p>
+  </div>
+
+  <a href="/admin/orders?status=Pending" class="summary-card-link">
+    <div class="summary-card">
+      <h3>Pending Orders</h3>
+      <p><%= pendingOrders %></p>
+    </div>
+  </a>
+
+</div>
+
+    <div class="admin-header">
+
+      <div>
+        <h1>Admin Dashboard</h1>
+        <p>Manage SyncMart products</p>
+      </div>
+
+      <a href="/admin/products/add"
+         class="add-product-btn">
+        + Add Product
+      </a>
+
+    </div>
+
+
+    <div class="admin-table-container">
+
+      <table class="admin-table">
+
+        <thead>
+
+          <tr>
+
+            <th>ID</th>
+
+            <th>Image</th>
+
+            <th>Product</th>
+
+            <th>Brand</th>
+
+            <th>Price</th>
+
+            <th>Stock</th>
+
+            <th>Actions</th>
+
+          </tr>
+
+        </thead>
+
+
+        <tbody>
+
+          <% products.forEach(function(product) { %>
+
+            <tr>
+
+              <td>
+                <%= product.id %>
+              </td>
+
+              <td>
+
+                <img
+                  src="/public/images/<%= product.image %>"
+                  class="admin-product-image"
+                  alt="<%= product.name %>"
+                >
+
+              </td>
+
+              <td>
+                <%= product.name %>
+              </td>
+
+              <td>
+                <%= product.brand %>
+              </td>
+
+              <td>
+                $<%= Number(product.price).toFixed(2) %>
+              </td>
+
+              <td>
+
+                <% if (product.stock > 0) { %>
+
+                  <span class="stock-available">
+                    <%= product.stock %>
+                  </span>
+
+                <% } else { %>
+
+                  <span class="stock-empty">
+                    Out of Stock
+                  </span>
+
+                <% } %>
+
+              </td>
+
+              <td>
+
+                <a
+                  href="/admin/products/edit/<%= product.id %>"
+                  class="edit-btn"
+                >
+                  Edit
+                </a>
+
+              <form
+  action="/admin/products/delete/<%= product.id %>"
+  method="POST"
+  class="delete-form"
+  onsubmit="return confirm('Are you sure you want to delete <%= product.name %>?');"
+>
+
+                  <button
+                    type="submit"
+                    class="delete-btn"
+                  >
+                    Delete
+                  </button>
+
+                </form>
+
+              </td>
+
+            </tr>
+
+          <% }) %>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  </div>
+
+
+  <%- include("partials/footer.ejs") %>
+
+</body>
+
+</html>

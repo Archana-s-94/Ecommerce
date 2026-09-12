@@ -27,13 +27,11 @@ app.use(function (req, res, next) {
   res.locals.signedin = req.session.signedin || false;
   res.locals.username = req.session.username || null;
   res.locals.userId = req.session.userId || null;
-
+  res.locals.role = req.session.role;
   next();
 });
 
-// ========================================
 // LOGIN PROTECTION MIDDLEWARE
-// ========================================
 
 function requireLogin(req, res, next) {
   if (!req.session.userId) {
@@ -42,6 +40,537 @@ function requireLogin(req, res, next) {
 
   next();
 }
+
+// REQUIRE ADMIN MIDDLEWARE
+
+function requireAdmin(req, res, next) {
+  if (!req.session.userId) {
+    return res.redirect("/signin");
+  }
+
+  if (req.session.role !== "admin") {
+    return res.status(403).send("Access denied. Admin only.");
+  }
+
+  next();
+}
+
+// ADMIN DASHBOARD
+
+app.get("/admin", requireAdmin, function (req, res) {
+  const productSql = `
+    SELECT *
+    FROM products
+    ORDER BY id DESC
+  `;
+
+  conn.query(productSql, function (productError, products) {
+    if (productError) {
+      console.log("Admin products error:", productError);
+      return res.status(500).send("Database error");
+    }
+
+    const orderSql = `
+      SELECT COUNT(*) AS totalOrders
+      FROM orders
+    `;
+
+    conn.query(orderSql, function (orderError, orderResult) {
+      if (orderError) {
+        console.log("Admin orders error:", orderError);
+        return res.status(500).send("Database error");
+      }
+
+      const customerSql = `
+        SELECT COUNT(*) AS totalCustomers
+        FROM users
+        WHERE role = 'customer'
+      `;
+
+      conn.query(customerSql, function (customerError, customerResult) {
+        if (customerError) {
+          console.log("Admin customers error:", customerError);
+          return res.status(500).send("Database error");
+        }
+
+        const pendingSql = `
+          SELECT COUNT(*) AS pendingOrders
+          FROM orders
+          WHERE status = 'Pending'
+        `;
+
+        conn.query(pendingSql, function (pendingError, pendingResult) {
+          if (pendingError) {
+            console.log("Pending orders error:", pendingError);
+            return res.status(500).send("Database error");
+          }
+
+          res.render("admin", {
+            products: products,
+            totalProducts: products.length,
+            totalOrders: orderResult[0].totalOrders,
+            totalCustomers: customerResult[0].totalCustomers,
+            pendingOrders: pendingResult[0].pendingOrders,
+            message: req.session.adminMessage || null,
+            messageType: req.session.adminMessageType || null,
+          });
+
+          req.session.adminMessage = null;
+          req.session.adminMessageType = null;
+        });
+      });
+    });
+  });
+});
+
+// ADMIN ORDERS
+
+app.get("/admin/orders", requireAdmin, function (req, res) {
+  const statusFilter = req.query.status;
+
+  const allowedStatuses = ["Pending", "Processing", "Shipped", "Delivered"];
+
+  let sql = `
+    SELECT
+      orders.id,
+      orders.total_amount,
+      orders.status,
+      orders.order_date,
+      users.username,
+      users.email
+    FROM orders
+    JOIN users
+      ON orders.user_id = users.id
+  `;
+
+  const values = [];
+
+  if (statusFilter && allowedStatuses.includes(statusFilter)) {
+    sql += `
+      WHERE orders.status = ?
+    `;
+
+    values.push(statusFilter);
+  }
+
+  sql += `
+    ORDER BY orders.order_date DESC
+  `;
+
+  conn.query(sql, values, function (err, orders) {
+    if (err) {
+      console.log("Admin orders error:", err);
+      return res.status(500).send("Database error");
+    }
+
+    res.render("admin-orders", {
+      orders: orders,
+      message: req.session.orderMessage || null,
+      statusFilter: statusFilter || "All",
+    });
+
+    req.session.orderMessage = null;
+  });
+});
+
+app.get("/admin/orders", requireAdmin, function (req, res) {
+  const statusFilter = req.query.status;
+
+  const allowedStatuses = ["Pending", "Processing", "Shipped", "Delivered"];
+
+  let sql = `
+    SELECT
+      orders.id,
+      orders.total_amount,
+      orders.status,
+      orders.order_date,
+      users.username,
+      users.email
+
+    FROM orders
+
+    JOIN users
+      ON orders.user_id = users.id
+  `;
+
+  const values = [];
+
+  if (statusFilter && allowedStatuses.includes(statusFilter)) {
+    sql += `
+      WHERE orders.status = ?
+    `;
+
+    values.push(statusFilter);
+  }
+
+  sql += `
+    ORDER BY orders.order_date DESC
+  `;
+
+  conn.query(sql, values, function (err, orders) {
+    if (err) {
+      console.log("Admin orders error:", err);
+      return res.status(500).send("Database error");
+    }
+
+    res.render("admin-orders", {
+      orders: orders,
+      message: req.session.orderMessage || null,
+      statusFilter: statusFilter || "All",
+    });
+
+    req.session.orderMessage = null;
+  });
+});
+
+// ADMIN - ORDER UPDATE PAGE
+
+app.post("/admin/orders/status/:id", requireAdmin, function (req, res) {
+  const orderId = req.params.id;
+  const status = req.body.status;
+
+  const allowedStatuses = ["Pending", "Processing", "Shipped", "Delivered"];
+
+  if (!allowedStatuses.includes(status)) {
+    req.session.orderMessage = "Invalid order status.";
+
+    return res.redirect("/admin/orders");
+  }
+
+  const sql = `
+      UPDATE orders
+      SET status = ?
+      WHERE id = ?
+    `;
+
+  conn.query(sql, [status, orderId], function (err, result) {
+    if (err) {
+      console.log("Order status update error:", err);
+      return res.status(500).send("Database error");
+    }
+
+    if (result.affectedRows === 0) {
+      req.session.orderMessage = "Order not found.";
+
+      return res.redirect("/admin/orders");
+    }
+
+    req.session.orderMessage =
+      "Order #" + orderId + " updated to " + status + ".";
+
+    console.log("Order status updated:", orderId, status);
+
+    return res.redirect("/admin/orders");
+  });
+});
+
+// ADMIN VIEW ALL OREDERS
+
+app.get("/admin/orders", requireAdmin, function (req, res) {
+  const sql = `
+    SELECT
+      orders.id,
+      orders.total_amount,
+      orders.status,
+      orders.order_date,
+      users.username,
+      users.email
+
+    FROM orders
+
+    JOIN users
+      ON orders.user_id = users.id
+
+    ORDER BY orders.order_date DESC
+  `;
+
+  conn.query(sql, function (err, orders) {
+    if (err) {
+      console.log("Admin orders error:", err);
+      return res.status(500).send("Database error");
+    }
+
+    res.render("admin-orders", {
+      orders: orders,
+      message: req.session.orderMessage || null,
+    });
+
+    req.session.orderMessage = null;
+  });
+});
+
+//ADMIN ADD PRDUCT PAGE
+
+app.get("/admin/products/add", requireAdmin, function (req, res) {
+  res.render("admin-add-product");
+});
+
+// ADMIN ADD PRODUCT
+
+app.post("/admin/products/add", requireAdmin, function (req, res) {
+  const name = req.body.name;
+  const brand = req.body.brand;
+  const model = req.body.model;
+  const price = req.body.price;
+  const stock = req.body.stock;
+  const categoryId = req.body.category_id;
+  const image = req.body.image;
+  const ram = req.body.ram;
+  const storage = req.body.storage;
+  const processor = req.body.processor;
+  const os = req.body.os;
+  const description = req.body.description;
+
+  const sql = `
+    INSERT INTO products
+    (
+      category_id,
+      name,
+      brand,
+      model,
+      price,
+      stock,
+      image,
+      ram,
+      storage,
+      processor,
+      os,
+      description
+    )
+
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `;
+
+  conn.query(
+    sql,
+    [
+      categoryId,
+      name,
+      brand,
+      model,
+      price,
+      stock,
+      image,
+      ram,
+      storage,
+      processor,
+      os,
+      description,
+    ],
+    function (err, result) {
+      if (err) {
+        console.log("Add product error:", err);
+        return res.status(500).send("Could not add product");
+      }
+
+      console.log("New product added:", result.insertId);
+
+      return res.redirect("/admin");
+    },
+  );
+});
+
+// ADMIN - EDIT PRODUCT PAGE
+
+app.get("/admin/products/edit/:id", requireAdmin, function (req, res) {
+  const productId = req.params.id;
+
+  const sql = `
+      SELECT *
+      FROM products
+      WHERE id = ?
+    `;
+
+  conn.query(sql, [productId], function (err, results) {
+    if (err) {
+      console.log("Edit product lookup error:", err);
+      return res.status(500).send("Database error");
+    }
+
+    if (results.length === 0) {
+      return res.status(404).send("Product not found");
+    }
+
+    res.render("admin-edit-product", {
+      product: results[0],
+    });
+  });
+});
+
+// ADMIN - UPDATE PRODUCT
+
+app.post("/admin/products/edit/:id", requireAdmin, function (req, res) {
+  const productId = req.params.id;
+
+  const name = req.body.name;
+  const brand = req.body.brand;
+  const model = req.body.model;
+  const price = req.body.price;
+  const stock = req.body.stock;
+  const categoryId = req.body.category_id;
+  const image = req.body.image;
+  const ram = req.body.ram;
+  const storage = req.body.storage;
+  const processor = req.body.processor;
+  const os = req.body.os;
+  const description = req.body.description;
+
+  const sql = `
+      UPDATE products
+
+      SET
+        category_id = ?,
+        name = ?,
+        brand = ?,
+        model = ?,
+        price = ?,
+        stock = ?,
+        image = ?,
+        ram = ?,
+        storage = ?,
+        processor = ?,
+        os = ?,
+        description = ?
+
+      WHERE id = ?
+    `;
+
+  conn.query(
+    sql,
+    [
+      categoryId,
+      name,
+      brand,
+      model,
+      price,
+      stock,
+      image,
+      ram,
+      storage,
+      processor,
+      os,
+      description,
+      productId,
+    ],
+    function (err, result) {
+      if (err) {
+        console.log("Update product error:", err);
+
+        return res.status(500).send("Could not update product");
+      }
+
+      if (result.affectedRows === 0) {
+        return res.status(404).send("Product not found");
+      }
+
+      console.log("Product updated:", productId);
+
+      return res.redirect("/admin");
+    },
+  );
+});
+
+// ADMIN - SAFE DELETE PRODUCT
+
+app.post("/admin/products/delete/:id", requireAdmin, function (req, res) {
+  const productId = req.params.id;
+
+  const checkSql = `
+      SELECT
+
+        (
+          SELECT COUNT(*)
+          FROM order_items
+          WHERE product_id = ?
+        ) AS orderCount,
+
+        (
+          SELECT COUNT(*)
+          FROM cart
+          WHERE product_id = ?
+        ) AS cartCount,
+
+        (
+          SELECT COUNT(*)
+          FROM wishlist
+          WHERE product_id = ?
+        ) AS wishlistCount
+    `;
+
+  conn.query(
+    checkSql,
+    [productId, productId, productId],
+    function (checkError, results) {
+      if (checkError) {
+        console.log("Product delete check error:", checkError);
+
+        return res.status(500).send("Database error");
+      }
+
+      const references = results[0];
+
+      const orderCount = Number(references.orderCount);
+
+      const cartCount = Number(references.cartCount);
+
+      const wishlistCount = Number(references.wishlistCount);
+
+      // Product has related records
+      if (orderCount > 0 || cartCount > 0 || wishlistCount > 0) {
+        console.log(
+          "Cannot delete product:",
+          productId,
+          "Orders:",
+          orderCount,
+          "Cart:",
+          cartCount,
+          "Wishlist:",
+          wishlistCount,
+        );
+
+        req.session.adminMessage =
+          "Cannot delete this product because it has existing records. " +
+          "Orders: " +
+          orderCount +
+          ", Cart: " +
+          cartCount +
+          ", Wishlist: " +
+          wishlistCount +
+          ". Set its stock to 0 if you no longer want to sell it.";
+
+        req.session.adminMessageType = "error";
+
+        return res.redirect("/admin");
+      }
+
+      // Safe to delete
+      const deleteSql = `
+          DELETE FROM products
+          WHERE id = ?
+        `;
+
+      conn.query(deleteSql, [productId], function (deleteError, result) {
+        if (deleteError) {
+          console.log("Delete product error:", deleteError);
+
+          return res.status(500).send("Could not delete product");
+        }
+
+        if (result.affectedRows === 0) {
+          return res.status(404).send("Product not found");
+        }
+
+        console.log("Product deleted:", productId);
+
+        req.session.adminMessage = "Product deleted successfully.";
+
+        req.session.adminMessageType = "success";
+
+        return res.redirect("/admin");
+      });
+    },
+  );
+});
 
 // Home-Page
 
@@ -144,9 +673,7 @@ app.get("/categories", function (req, res) {
   });
 });
 
-// ========================================
-// WISHLIST - DATABASE BASED
-// ========================================
+// WISHLIST
 
 // View wishlist
 app.get("/wishlist", requireLogin, function (req, res) {
@@ -219,9 +746,7 @@ app.post("/wishlist/remove/:id", requireLogin, function (req, res) {
   });
 });
 
-// ========================================
-// VIEW DATABASE CART
-// ========================================
+// VIEW CART
 
 app.get("/cart", requireLogin, function (req, res) {
   const userId = req.session.userId;
@@ -262,9 +787,7 @@ app.get("/cart", requireLogin, function (req, res) {
   });
 });
 
-// ========================================
-// ADD PRODUCT TO DATABASE CART
-// ========================================
+// ADD PRODUCT TO CART
 
 app.post("/cart/add/:id", requireLogin, function (req, res) {
   const userId = req.session.userId;
@@ -370,40 +893,69 @@ app.post("/cart/add/:id", requireLogin, function (req, res) {
   });
 });
 
-// Increase cart quantity
-
-// ========================================
-// INCREASE CART QUANTITY
-// ========================================
+// Increase cart quantity with stock check
 
 app.post("/cart/increase/:id", requireLogin, function (req, res) {
   const userId = req.session.userId;
   const productId = req.params.id;
 
-  const sql = `
+  // Get current cart quantity and available product stock
+  const checkSql = `
+    SELECT
+      cart.quantity,
+      products.stock,
+      products.name
+    FROM cart
+    JOIN products
+      ON cart.product_id = products.id
+    WHERE cart.user_id = ?
+    AND cart.product_id = ?
+  `;
+
+  conn.query(checkSql, [userId, productId], function (checkError, result) {
+    if (checkError) {
+      console.log("Cart stock check error:", checkError);
+      return res.status(500).send("Database error");
+    }
+
+    if (result.length === 0) {
+      return res.redirect("/cart");
+    }
+
+    const currentQuantity = Number(result[0].quantity);
+    const availableStock = Number(result[0].stock);
+
+    // Do not allow quantity to exceed stock
+    if (currentQuantity >= availableStock) {
+      console.log(
+        "Cannot increase quantity. Stock limit reached:",
+        result[0].name,
+      );
+
+      return res.redirect("/cart");
+    }
+
+    const updateSql = `
         UPDATE cart
         SET quantity = quantity + 1
         WHERE user_id = ?
         AND product_id = ?
-    `;
+      `;
 
-  conn.query(sql, [userId, productId], function (err, result) {
-    if (err) {
-      console.log("Increase cart error:", err);
-      return res.status(500).send("Database error");
-    }
+    conn.query(updateSql, [userId, productId], function (updateError) {
+      if (updateError) {
+        console.log("Increase cart error:", updateError);
+        return res.status(500).send("Database error");
+      }
 
-    console.log("Cart quantity increased:", productId);
+      console.log("Cart quantity increased:", productId);
 
-    res.redirect("/cart");
+      return res.redirect("/cart");
+    });
   });
 });
 
-// Decrease cart quantity
-
-// ========================================
 // DECREASE CART QUANTITY
-// ========================================
 
 app.post("/cart/decrease/:id", requireLogin, function (req, res) {
   const userId = req.session.userId;
@@ -467,11 +1019,7 @@ app.post("/cart/decrease/:id", requireLogin, function (req, res) {
   });
 });
 
-// Remove from cart
-
-// ========================================
 // REMOVE PRODUCT FROM CART
-// ========================================
 
 app.post("/cart/remove/:id", requireLogin, function (req, res) {
   const userId = req.session.userId;
@@ -629,6 +1177,8 @@ app.post("/signin", function (req, res) {
 
       req.session.email = user.email;
 
+      req.session.role = user.role;
+
       req.session.signedin = true;
 
       req.session.save(function (sessionError) {
@@ -675,11 +1225,7 @@ app.get("/orders", function (req, res) {
   res.render("orders");
 });
 
-// Get all orders for logged in user
-
-// ========================================
-// GET ALL ORDERS WITH ORDER ITEMS
-// ========================================
+// GET ALL ORDERS FOR LOGGED-IN USER
 
 app.get("/api/orders", requireLogin, function (req, res) {
   const userId = req.session.userId;
@@ -818,132 +1364,236 @@ app.get("/api/orders/:id", function (req, res) {
   });
 });
 
-// ========================================
-// PLACE ORDER FROM DATABASE CART
-// ========================================
+// PLACE ORDER
 
 app.post("/api/orders", requireLogin, function (req, res) {
   const userId = req.session.userId;
 
-  // 1. Get all products from this user's cart
-  const cartSql = `
-    SELECT
-      cart.product_id,
-      cart.quantity,
-      products.price
-    FROM cart
-    JOIN products
-      ON cart.product_id = products.id
-    WHERE cart.user_id = ?
-  `;
-
-  conn.query(cartSql, [userId], function (cartError, cartItems) {
-    if (cartError) {
-      console.log("Order cart error:", cartError);
+  // Start transaction
+  conn.beginTransaction(function (transactionError) {
+    if (transactionError) {
+      console.log("Transaction start error:", transactionError);
 
       return res.status(500).json({
         success: false,
-        message: "Database error",
+        message: "Could not start order transaction",
       });
     }
 
-    // Prevent empty order
-    if (cartItems.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Your cart is empty",
-      });
-    }
+    // 1. GET CART ITEMS WITH PRODUCT DETAILS AND LOCK THEM FOR UPDATE
 
-    // 2. Calculate total on the server
-    let totalAmount = 0;
-
-    cartItems.forEach(function (item) {
-      totalAmount += Number(item.price) * Number(item.quantity);
-    });
-
-    // 3. Create main order
-    const orderSql = `
-      INSERT INTO orders
-        (user_id, total_amount, status)
-      VALUES (?, ?, ?)
+    const cartSql = `
+      SELECT
+        cart.product_id,
+        cart.quantity,
+        products.name,
+        products.price,
+        products.stock
+      FROM cart
+      JOIN products
+        ON cart.product_id = products.id
+      WHERE cart.user_id = ?
+      FOR UPDATE
     `;
 
-    conn.query(
-      orderSql,
-      [userId, totalAmount, "Pending"],
-      function (orderError, orderResult) {
-        if (orderError) {
-          console.log("Create order error:", orderError);
+    conn.query(cartSql, [userId], function (cartError, cartItems) {
+      if (cartError) {
+        console.log("Order cart error:", cartError);
 
+        return conn.rollback(function () {
           return res.status(500).json({
             success: false,
-            message: "Could not create order",
+            message: "Database error",
           });
-        }
-
-        const orderId = orderResult.insertId;
-
-        console.log("Order created:", orderId);
-
-        // 4. Prepare order_items data
-        const orderItems = cartItems.map(function (item) {
-          return [orderId, item.product_id, item.quantity, item.price];
         });
+      }
 
-        // 5. Save every cart product into order_items
-        const orderItemsSql = `
-          INSERT INTO order_items
-            (order_id, product_id, quantity, price)
-          VALUES ?
-        `;
+      // 2. PREVENT ORDER IF CART IS EMPTY
 
-        conn.query(orderItemsSql, [orderItems], function (itemsError) {
-          if (itemsError) {
-            console.log("Order items error:", itemsError);
+      if (cartItems.length === 0) {
+        return conn.rollback(function () {
+          return res.status(400).json({
+            success: false,
+            message: "Your cart is empty",
+          });
+        });
+      }
 
-            return res.status(500).json({
-              success: false,
-              message: "Order created but order items could not be saved",
+      // 3. CHECK STOCK AVAILABILITY FOR EACH ITEM
+
+      const insufficientStockItem = cartItems.find(function (item) {
+        return Number(item.quantity) > Number(item.stock);
+      });
+
+      if (insufficientStockItem) {
+        return conn.rollback(function () {
+          return res.status(400).json({
+            success: false,
+            message:
+              "Not enough stock for " +
+              insufficientStockItem.name +
+              ". Available stock: " +
+              insufficientStockItem.stock,
+          });
+        });
+      }
+
+      // 4. CALCULATE TOTAL AMOUNT
+
+      let totalAmount = 0;
+
+      cartItems.forEach(function (item) {
+        totalAmount += Number(item.price) * Number(item.quantity);
+      });
+
+      // 5. CREATE ORDER RECORD
+
+      const orderSql = `
+        INSERT INTO orders
+          (user_id, total_amount, status)
+        VALUES (?, ?, ?)
+      `;
+
+      conn.query(
+        orderSql,
+        [userId, totalAmount, "Pending"],
+        function (orderError, orderResult) {
+          if (orderError) {
+            console.log("Create order error:", orderError);
+
+            return conn.rollback(function () {
+              return res.status(500).json({
+                success: false,
+                message: "Could not create order",
+              });
             });
           }
 
-          console.log("Order items saved:", orderItems);
+          const orderId = orderResult.insertId;
 
-          // 6. Clear this user's cart
-          const clearCartSql = `
-              DELETE FROM cart
-              WHERE user_id = ?
-            `;
+          console.log("Order created:", orderId);
 
-          conn.query(clearCartSql, [userId], function (clearError) {
-            if (clearError) {
-              console.log("Clear cart error:", clearError);
+          // 6. PREPARE ORDER ITEMS DATA
 
-              return res.status(500).json({
-                success: false,
-                message: "Order created but cart could not be cleared",
+          const orderItems = cartItems.map(function (item) {
+            return [orderId, item.product_id, item.quantity, item.price];
+          });
+
+          // 7. SAVE ORDER ITEMS
+
+          const orderItemsSql = `
+            INSERT INTO order_items
+              (order_id, product_id, quantity, price)
+            VALUES ?
+          `;
+
+          conn.query(orderItemsSql, [orderItems], function (itemsError) {
+            if (itemsError) {
+              console.log("Order items error:", itemsError);
+
+              return conn.rollback(function () {
+                return res.status(500).json({
+                  success: false,
+                  message: "Could not save order items",
+                });
               });
             }
 
-            console.log("Database cart cleared for user:", userId);
+            console.log("Order items saved");
 
-            // 7. Send success response
-            return res.json({
-              success: true,
-              message: "Order placed successfully",
-              orderId: orderId,
+            // 8. REDUCE STOCK FOR EACH PRODUCT
+
+            let completedUpdates = 0;
+            let stockFailed = false;
+
+            cartItems.forEach(function (item) {
+              const updateStockSql = `
+                  UPDATE products
+                  SET stock = stock - ?
+                  WHERE id = ?
+                  AND stock >= ?
+                `;
+
+              conn.query(
+                updateStockSql,
+                [item.quantity, item.product_id, item.quantity],
+                function (stockError, stockResult) {
+                  if (stockFailed) {
+                    return;
+                  }
+
+                  if (stockError || stockResult.affectedRows === 0) {
+                    stockFailed = true;
+
+                    console.log("Stock update failed:", stockError);
+
+                    return conn.rollback(function () {
+                      return res.status(400).json({
+                        success: false,
+                        message: "Could not update product stock",
+                      });
+                    });
+                  }
+
+                  completedUpdates++;
+
+                  // Continue only after all stock updates
+
+                  if (completedUpdates === cartItems.length) {
+                    // 9. CLEAR USER'S CART
+
+                    const clearCartSql = `
+                        DELETE FROM cart
+                        WHERE user_id = ?
+                      `;
+
+                    conn.query(clearCartSql, [userId], function (clearError) {
+                      if (clearError) {
+                        console.log("Clear cart error:", clearError);
+
+                        return conn.rollback(function () {
+                          return res.status(500).json({
+                            success: false,
+                            message: "Could not clear cart",
+                          });
+                        });
+                      }
+
+                      // 10.COMMIT TRANSACTION
+
+                      conn.commit(function (commitError) {
+                        if (commitError) {
+                          console.log("Commit error:", commitError);
+
+                          return conn.rollback(function () {
+                            return res.status(500).json({
+                              success: false,
+                              message: "Order could not be completed",
+                            });
+                          });
+                        }
+
+                        console.log("Order transaction completed:", orderId);
+
+                        return res.json({
+                          success: true,
+                          message: "Order placed successfully",
+                          orderId: orderId,
+                        });
+                      });
+                    });
+                  }
+                },
+              );
             });
           });
-        });
-      },
-    );
+        },
+      );
+    });
   });
 });
 
-// ========================================
-// DATABASE CHECKOUT
-// ========================================
+// DATABASE CHECKOUT PAGE
 
 app.get("/checkout", requireLogin, function (req, res) {
   const userId = req.session.userId;
@@ -1048,28 +1698,20 @@ app.get("/test-session", function (req, res) {
   });
 });
 
-// Profile
+// PROFILE PAGE
 
-app.get("/profile", function (req, res) {
+app.get("/profile", requireLogin, function (req, res) {
   const userId = req.session.userId;
 
-  console.log("Profile user ID:", userId);
-
-  // Check if user is logged in
-
-  if (!userId) {
-    return res.redirect("/signin");
-  }
-
   const sql = `
-        SELECT
-            id,
-            username,
-            email,
-            contact
-        FROM users
-        WHERE id = ?
-    `;
+    SELECT
+      id,
+      username,
+      email,
+      contact
+    FROM users
+    WHERE id = ?
+  `;
 
   conn.query(sql, [userId], function (err, results) {
     if (err) {
@@ -1082,11 +1724,185 @@ app.get("/profile", function (req, res) {
       return res.status(404).send("User not found");
     }
 
-    console.log("Profile user:", results[0]);
-
     res.render("profile", {
       user: results[0],
+
+      message: req.session.profileMessage || null,
     });
+
+    // Remove message after showing it once
+    req.session.profileMessage = null;
+  });
+});
+
+// UODATE PROFILE
+
+app.post("/profile/update", requireLogin, function (req, res) {
+  const userId = req.session.userId;
+
+  const username = req.body.username.trim();
+  const email = req.body.email.trim();
+  const contact = req.body.contact.trim();
+
+  // Basic validation
+  if (!username || !email || !contact) {
+    req.session.profileMessage = "Please complete all profile fields.";
+
+    return res.redirect("/profile");
+  }
+
+  // Check if another user already has this email
+  const checkEmailSql = `
+    SELECT id
+    FROM users
+    WHERE email = ?
+    AND id != ?
+  `;
+
+  conn.query(
+    checkEmailSql,
+    [email, userId],
+    function (checkError, emailResults) {
+      if (checkError) {
+        console.log("Profile email check error:", checkError);
+
+        return res.status(500).send("Database error");
+      }
+
+      if (emailResults.length > 0) {
+        req.session.profileMessage =
+          "That email address is already being used.";
+
+        return res.redirect("/profile");
+      }
+
+      const updateSql = `
+        UPDATE users
+        SET
+          username = ?,
+          email = ?,
+          contact = ?
+        WHERE id = ?
+      `;
+
+      conn.query(
+        updateSql,
+        [username, email, contact, userId],
+        function (updateError) {
+          if (updateError) {
+            console.log("Profile update error:", updateError);
+
+            return res.status(500).send("Could not update profile");
+          }
+
+          // Update session values
+          req.session.username = username;
+          req.session.email = email;
+
+          req.session.profileMessage = "Profile updated successfully.";
+
+          console.log("Profile updated for user:", userId);
+
+          return res.redirect("/profile");
+        },
+      );
+    },
+  );
+});
+
+// CHANGE PASSWORD
+
+app.post("/profile/change-password", requireLogin, async function (req, res) {
+  const userId = req.session.userId;
+
+  const currentPassword = req.body.currentPassword;
+  const newPassword = req.body.newPassword;
+  const confirmPassword = req.body.confirmPassword;
+
+  if (!currentPassword || !newPassword || !confirmPassword) {
+    req.session.profileMessage = "Please complete all password fields.";
+
+    return res.redirect("/profile");
+  }
+
+  if (newPassword.length < 8) {
+    req.session.profileMessage = "New password must be at least 8 characters.";
+
+    return res.redirect("/profile");
+  }
+
+  if (newPassword !== confirmPassword) {
+    req.session.profileMessage = "New passwords do not match.";
+
+    return res.redirect("/profile");
+  }
+
+  const userSql = `
+      SELECT password
+      FROM users
+      WHERE id = ?
+    `;
+
+  conn.query(userSql, [userId], async function (userError, results) {
+    if (userError) {
+      console.log("Password lookup error:", userError);
+
+      return res.status(500).send("Database error");
+    }
+
+    if (results.length === 0) {
+      return res.status(404).send("User not found");
+    }
+
+    try {
+      const storedPassword = results[0].password;
+
+      const passwordMatch = await bcrypt.compare(
+        currentPassword,
+        storedPassword,
+      );
+
+      if (!passwordMatch) {
+        req.session.profileMessage = "Current password is incorrect.";
+
+        return res.redirect("/profile");
+      }
+
+      const samePassword = await bcrypt.compare(newPassword, storedPassword);
+
+      if (samePassword) {
+        req.session.profileMessage =
+          "New password must be different from your current password.";
+
+        return res.redirect("/profile");
+      }
+
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+      const updateSql = `
+            UPDATE users
+            SET password = ?
+            WHERE id = ?
+          `;
+
+      conn.query(updateSql, [hashedPassword, userId], function (updateError) {
+        if (updateError) {
+          console.log("Password update error:", updateError);
+
+          return res.status(500).send("Could not update password");
+        }
+
+        req.session.profileMessage = "Password changed successfully.";
+
+        console.log("Password updated for user:", userId);
+
+        return res.redirect("/profile");
+      });
+    } catch (passwordError) {
+      console.log("Password change error:", passwordError);
+
+      return res.status(500).send("Could not change password");
+    }
   });
 });
 
