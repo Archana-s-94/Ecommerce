@@ -572,6 +572,12 @@ app.post("/admin/products/delete/:id", requireAdmin, function (req, res) {
   );
 });
 
+// Redirect root routr to /home
+
+app.get("/", function (req, res) {
+  res.redirect("/home");
+});
+
 // Home-Page
 
 app.get("/home", function (req, res) {
